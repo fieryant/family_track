@@ -1,0 +1,44 @@
+# Enable mod_rewrite for routing
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Remove trailing slashes (unless it's a directory)
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+  # Redirect HTTP to HTTPS (uncomment if using HTTPS)
+  # RewriteCond %{HTTPS} off
+  # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # For all requests that are not existing files or directories,
+  # rewrite to index.html for Vue Router to handle client-side routing
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [QSA,L]
+</IfModule>
+
+
+# Don't cache HTML files
+<FilesMatch "\.html$">
+  Header set Cache-Control "public, max-age=0, must-revalidate"
+</FilesMatch>
+
+# Security headers
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "SAMEORIGIN"
+Header set X-XSS-Protection "1; mode=block"
+Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+# Set proper MIME types
+<IfModule mod_mime.c>
+  AddType application/json .json
+  AddType application/javascript .mjs
+  AddEncoding gzip .gz
+  AddType image/svg+xml svg svgz
+  AddEncoding gzip svgz
+</IfModule>
+
+# Enable FollowSymLinks
+<IfModule mod_dir.c>
+  DirectoryIndex index.html
+</IfModule>
