@@ -1,6 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import { isSupabaseConfigured } from '../lib/supabase'
 
 const routes = [
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('../views/LoginView.vue'),
+  },
   {
     path: '/',
     name: 'home',
@@ -52,6 +59,21 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+router.beforeEach(async (to) => {
+  if (!isSupabaseConfigured) return true
+
+  const authStore = useAuthStore()
+  await authStore.initialize()
+
+  if (!authStore.isAuthenticated && to.name !== 'login') {
+    return { name: 'login' }
+  }
+
+  if (authStore.isAuthenticated && to.name === 'login') {
+    return { name: 'home' }
+  }
 })
 
 export default router

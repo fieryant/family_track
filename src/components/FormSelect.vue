@@ -1,6 +1,6 @@
 <template>
-  <div class="block space-y-2">
-    <span class="text-sm font-medium text-slate-200">{{ label }}</span>
+  <div class="block">
+    <div class="text-sm font-medium text-slate-200 mb-2">{{ label }}</div>
 
     <!-- Trigger -->
     <button

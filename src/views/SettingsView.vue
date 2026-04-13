@@ -1,31 +1,11 @@
-<template>
-  <div class="w-full space-y-6">
-    <div>
-      <h1 class="text-2xl font-bold text-slate-100">Settings</h1>
-      <p class="mt-1 text-sm text-slate-400">Manage your catalog data</p>
-    </div>
-
-    <div class="space-y-3">
-      <router-link
-        v-for="item in menuItems"
-        :key="item.to"
-        :to="item.to"
-        class="flex items-center gap-4 rounded-2xl border border-white/10 bg-slate-900/60 px-5 py-4 backdrop-blur-xl transition hover:bg-slate-800/70 active:scale-[0.98]"
-      >
-        <div :class="['flex h-11 w-11 items-center justify-center rounded-xl text-xl', item.bg]">
-          {{ item.icon }}
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="font-semibold text-slate-100">{{ item.label }}</p>
-          <p class="text-xs text-slate-400 truncate">{{ item.description }}</p>
-        </div>
-        <svg class="h-4 w-4 flex-shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </router-link>
-    </div>
-  </div>
-</template>
-
 <script setup>
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import { isSupabaseConfigured } from '../lib/supabase'
+
+const router = useRouter()
+const authStore = useAuthStore()
+
 const menuItems = [
   {
     to: '/settings/unit-types',
@@ -56,4 +36,52 @@ const menuItems = [
     description: 'Manage your item catalog',
   },
 ]
+
+async function signOut() {
+  await authStore.signOut()
+  router.push('/login')
+}
 </script>
+
+<template>
+  <div class="w-full space-y-6">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-100">Settings</h1>
+      <p class="mt-1 text-sm text-slate-400">Manage your catalog data</p>
+    </div>
+
+    <div class="space-y-3">
+      <router-link
+        v-for="item in menuItems"
+        :key="item.to"
+        :to="item.to"
+        class="flex items-center gap-4 rounded-2xl border border-white/10 bg-slate-900/60 px-5 py-4 backdrop-blur-xl transition hover:bg-slate-800/70 active:scale-[0.98]"
+      >
+        <div :class="['flex h-11 w-11 items-center justify-center rounded-xl text-xl', item.bg]">
+          {{ item.icon }}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-slate-100">{{ item.label }}</p>
+          <p class="text-xs text-slate-400 truncate">{{ item.description }}</p>
+        </div>
+        <svg class="h-4 w-4 shrink-0 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </router-link>
+    </div>
+
+    <div v-if="isSupabaseConfigured" class="pt-2">
+      <button
+        type="button"
+        class="flex w-full items-center gap-4 rounded-2xl border border-red-400/15 bg-red-400/5 px-5 py-4 text-left transition hover:bg-red-400/10 active:scale-[0.98]"
+        @click="signOut"
+      >
+        <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-red-400/10 text-xl">
+          🚪
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-red-300">Sign Out</p>
+          <p class="text-xs text-slate-400 truncate">{{ authStore.user?.email }}</p>
+        </div>
+      </button>
+    </div>
+  </div>
+</template>

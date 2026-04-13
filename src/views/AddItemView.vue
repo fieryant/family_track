@@ -1,96 +1,3 @@
-<template>
-  <div id="add-item-view" class="space-y-4 w-full">
-    <div class="flex items-center gap-3">
-      <router-link to="/" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white">
-        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      </router-link>
-      <div>
-        <h2 class="text-2xl font-bold tracking-tight text-white">Add Items</h2>
-        <p class="text-sm text-slate-400">Browse the catalog and add quantities to the active list.</p>
-      </div>
-    </div>
-
-    <SearchBar v-model="searchQuery" placeholder="Search items..." />
-
-    <div class="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-      <div>
-        <p class="text-sm font-medium text-white">Can't find it in the catalog?</p>
-        <p class="text-xs text-slate-400">Create a custom item and add it to the list right away.</p>
-      </div>
-      <button
-        type="button"
-        class="shrink-0 rounded-2xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-400/20"
-        @click="openCreateDialog()"
-      >
-        Add custom item
-      </button>
-    </div>
-
-    <CategoryFilter v-model="selectedCategory" :categories="categoriesStore.sorted" />
-
-    <section v-if="!searchQuery && !selectedCategory && frequentItems.length > 0" class="space-y-3">
-      <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Frequently Bought</h3>
-      <div class="flex flex-col gap-3">
-        <ItemCard
-          v-for="item in frequentItems"
-          :key="item.id"
-          :item="item"
-          :in-list="isInList(item.id)"
-          :in-list-amount="inListAmountLabel(item.id)"
-          @click="onItemClick(item)"
-        />
-      </div>
-    </section>
-
-    <section v-for="group in filteredItemsByCategory" :key="group.categoryId" class="space-y-3">
-      <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{{ group.icon }} {{ group.name }}</h3>
-      <div class="flex flex-col gap-3">
-        <ItemCard
-          v-for="item in group.items"
-          :key="item.id"
-          :item="item"
-          :in-list="isInList(item.id)"
-          :in-list-amount="inListAmountLabel(item.id)"
-          @click="onItemClick(item)"
-        />
-      </div>
-    </section>
-
-    <EmptyState v-if="filteredItemsByCategory.length === 0 && searchQuery" title="No items found" :message="`Create &quot;${searchQuery}&quot; as a new catalog item.`">
-      <template #actions>
-        <button
-          type="button"
-          class="mt-6 inline-flex items-center justify-center rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
-          @click="openCreateDialog(searchQuery)"
-        >
-          Create item
-        </button>
-      </template>
-    </EmptyState>
-
-    <CreateItemDialog
-      ref="createDialogRef"
-      :show="showCreateDialog"
-      :categories="categoriesStore.sorted"
-      :loading="creatingItem"
-      :prefill-name="prefillItemName"
-      @close="closeCreateDialog"
-      @submit="handleCreateItemSubmit"
-    />
-
-    <!-- Unit preset picker -->
-    <UnitPresetPicker
-      :show="showPresetPicker"
-      :item="selectedItem"
-      @close="showPresetPicker = false"
-      @confirm="handleAddToList"
-    />
-
-    <!-- Toast notification -->
-    <Toast :show="!!toastMessage" :message="toastMessage" />
-  </div>
-</template>
-
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useItemsStore } from '../stores/items'
@@ -225,3 +132,75 @@ async function handleAddToList({ amount, unit }) {
   selectedItem.value = null
 }
 </script>
+
+<template>
+  <div id="add-item-view" class="space-y-4 w-full">
+    <div class="flex items-center gap-3">
+      <router-link to="/"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </router-link>
+      <div>
+        <h2 class="text-2xl font-bold tracking-tight text-white">Add Items</h2>
+        <p class="text-sm text-slate-400">Browse the catalog and add quantities to the active list.</p>
+      </div>
+    </div>
+
+    <SearchBar v-model="searchQuery" placeholder="Search items..." />
+
+    <div class="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+      <div>
+        <p class="text-sm font-medium text-white">Can't find it in the catalog?</p>
+        <p class="text-xs text-slate-400">Create a custom item and add it to the list right away.</p>
+      </div>
+      <button type="button"
+        class="shrink-0 rounded-2xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-400/20"
+        @click="openCreateDialog()">
+        Add custom item
+      </button>
+    </div>
+
+    <CategoryFilter v-model="selectedCategory" :categories="categoriesStore.sorted" />
+
+    <section v-if="!searchQuery && !selectedCategory && frequentItems.length > 0" class="space-y-3">
+      <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Frequently Bought</h3>
+      <div class="flex flex-col gap-3">
+        <ItemCard v-for="item in frequentItems" :key="item.id" :item="item" :in-list="isInList(item.id)"
+          :in-list-amount="inListAmountLabel(item.id)" @click="onItemClick(item)" />
+      </div>
+    </section>
+
+    <section v-for="group in filteredItemsByCategory" :key="group.categoryId" class="space-y-3">
+      <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{{ group.icon }} {{ group.name }}</h3>
+      <div class="flex flex-col gap-3">
+        <ItemCard v-for="item in group.items" :key="item.id" :item="item" :in-list="isInList(item.id)"
+          :in-list-amount="inListAmountLabel(item.id)" @click="onItemClick(item)" />
+      </div>
+    </section>
+
+    <EmptyState v-if="filteredItemsByCategory.length === 0 && searchQuery" title="No items found"
+      :message="`Create &quot;${searchQuery}&quot; as a new catalog item.`">
+      <template #actions>
+        <button type="button"
+          class="mt-6 inline-flex items-center justify-center rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+          @click="openCreateDialog(searchQuery)">
+          Create item
+        </button>
+      </template>
+    </EmptyState>
+
+    <CreateItemDialog ref="createDialogRef" :show="showCreateDialog" :categories="categoriesStore.sorted"
+      :loading="creatingItem" :prefill-name="prefillItemName" @close="closeCreateDialog"
+      @submit="handleCreateItemSubmit" />
+
+    <!-- Unit preset picker -->
+    <UnitPresetPicker :show="showPresetPicker" :item="selectedItem" @close="showPresetPicker = false"
+      @confirm="handleAddToList" />
+
+    <!-- Toast notification -->
+    <Toast :show="!!toastMessage" :message="toastMessage" />
+  </div>
+</template>

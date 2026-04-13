@@ -29,7 +29,7 @@
 
             <div class="mb-6">
               <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Or enter custom amount</p>
-              <div class="flex gap-3">
+              <div class="flex items-end gap-3">
                 <input
                   id="custom-amount-input"
                   v-model.number="customAmount"
@@ -40,9 +40,14 @@
                   placeholder="Amount"
                   @focus="selectedPreset = null"
                 />
-                <select id="custom-unit-select" v-model="customUnit" class="w-28 rounded-2xl border border-white/10 bg-slate-800/80 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-cyan-400/60 focus:ring-2 focus:ring-cyan-400/20">
-                  <option v-for="u in unitOptions" :key="u" :value="u">{{ u }}</option>
-                </select>
+                <div class="w-28">
+                  <FormSelect
+                    id="custom-unit-select"
+                    v-model="customUnit"
+                    label=""
+                    :options="unitOptionsMapped"
+                  />
+                </div>
               </div>
             </div>
 
@@ -61,8 +66,11 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useItemsStore } from '../stores/items'
+import { useUnitsStore } from '../stores/units'
+import { useUnitTypesStore } from '../stores/unitTypes'
+import FormSelect from './FormSelect.vue'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -71,6 +79,13 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'confirm'])
 const itemsStore = useItemsStore()
+const unitsStore = useUnitsStore()
+const unitTypesStore = useUnitTypesStore()
+
+onMounted(() => {
+  if (!unitsStore.units.length) unitsStore.fetch()
+  if (!unitTypesStore.unitTypes.length) unitTypesStore.fetch()
+})
 
 const selectedPreset = ref(null)
 const customAmount = ref(null)
@@ -81,13 +96,12 @@ const presets = computed(() => {
   return itemsStore.presetsForItem(props.item.id)
 })
 
-const unitOptions = computed(() => {
+const unitOptionsMapped = computed(() => {
   if (!props.item) return []
-  const type = props.item.default_unit_type
-  if (type === 'weight') return ['g', 'kg']
-  if (type === 'volume') return ['ml', 'L']
-  if (type === 'count') return ['pc', 'pack', 'dozen']
-  return ['pc']
+  const typeName = props.item.default_unit_type
+  const unitType = unitTypesStore.unitTypes.find(t => t.name === typeName)
+  if (!unitType) return []
+  return unitsStore.forType(unitType.id).map(u => ({ value: u.symbol, label: u.symbol }))
 })
 
 const canConfirm = computed(() => {
@@ -97,7 +111,7 @@ const canConfirm = computed(() => {
 watch(() => props.item, () => {
   selectedPreset.value = null
   customAmount.value = null
-  customUnit.value = unitOptions.value[0] || 'pc'
+  customUnit.value = unitOptionsMapped.value[0]?.value || ''
 })
 
 function selectPreset(preset) {
