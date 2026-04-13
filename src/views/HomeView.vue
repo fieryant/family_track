@@ -72,7 +72,7 @@
 
     <PartialBuyDialog
       :show="showPartialDialog"
-      :item="partialItem"
+      :item="partialItem ?? undefined"
       @close="showPartialDialog = false"
       @confirm="handlePartialConfirm"
     />
@@ -86,8 +86,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import type { ShopListItem as ShopListItemData } from '../types'
 import { useShopListStore } from '../stores/shopList'
 import { useSessionStore } from '../stores/session'
 import { useCategoriesStore } from '../stores/categories'
@@ -105,7 +106,7 @@ const itemsStore = useItemsStore()
 const filter = ref('all')
 const showPartialDialog = ref(false)
 const showCompleteDialog = ref(false)
-const partialItem = ref(null)
+const partialItem = ref<ShopListItemData | null>(null)
 
 const filteredGroups = computed(() => {
   return shopListStore.groupedByCategory
@@ -126,12 +127,12 @@ const progressPercent = computed(() => {
   return Math.round(((bought + partial) / active) * 100)
 })
 
-function openPartialDialog(item) {
+function openPartialDialog(item: ShopListItemData) {
   partialItem.value = item
   showPartialDialog.value = true
 }
 
-async function handlePartialConfirm({ amount, unit }) {
+async function handlePartialConfirm({ amount, unit }: { amount: number; unit: string }) {
   if (partialItem.value) {
     await shopListStore.updateStatus(partialItem.value.id, 'partial', amount, unit)
   }

@@ -47,7 +47,7 @@
   </header>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useShopListStore } from '../stores/shopList'
 const shopListStore = useShopListStore()
 </script>

@@ -9,7 +9,7 @@
         : item.status === 'partial'
           ? 'border-sky-400/20 bg-sky-400/10'
           : item.status === 'removed'
-            ? 'border-white/5 bg-white/[0.03] opacity-50'
+            ? 'border-white/5 bg-white/3 opacity-50'
             : 'border-white/10 bg-slate-900/80 hover:border-white/15 hover:bg-slate-800/80',
     ]"
     @click="handleClick"
@@ -66,7 +66,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const props = defineProps({
   item: { type: Object, required: true },
   shoppingMode: { type: Boolean, default: false },
@@ -74,7 +74,9 @@ const props = defineProps({
 
 const emit = defineEmits(['toggle', 'partial', 'remove'])
 
-function statusDotClasses(status) {
+import type { ShopListStatus } from '../types'
+
+function statusDotClasses(status: ShopListStatus) {
   const base = 'mt-1 block h-2 w-2 rounded-full'
   if (status === 'bought') return `${base} bg-emerald-400`
   if (status === 'partial') return `${base} bg-sky-400`
@@ -82,7 +84,7 @@ function statusDotClasses(status) {
   return `${base} bg-amber-400`
 }
 
-function statusBadgeClasses(status) {
+function statusBadgeClasses(status: ShopListStatus) {
   const base = 'inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide'
   if (status === 'bought') return `${base} bg-emerald-400/10 text-emerald-300`
   if (status === 'partial') return `${base} bg-sky-400/10 text-sky-300`

@@ -2,9 +2,10 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { seedCategories } from '../lib/seedData'
+import type { Category } from '../types'
 
 export const useCategoriesStore = defineStore('categories', () => {
-  const categories = ref([])
+  const categories = ref<Category[]>([])
   const loading = ref(false)
 
   const sorted = computed(() =>
@@ -12,7 +13,7 @@ export const useCategoriesStore = defineStore('categories', () => {
   )
 
   const byId = computed(() => {
-    const map = {}
+    const map: Record<string, Category> = {}
     categories.value.forEach(c => { map[c.id] = c })
     return map
   })
@@ -21,7 +22,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     loading.value = true
     try {
       if (isSupabaseConfigured) {
-        const { data, error } = await supabase
+        const { data, error } = await supabase!
           .from('categories')
           .select('*')
           .order('sort_order')
@@ -38,12 +39,12 @@ export const useCategoriesStore = defineStore('categories', () => {
     }
   }
 
-  async function create({ name, icon = '' }) {
+  async function create({ name, icon = '' }: { name: string; icon?: string }): Promise<Category> {
     const trimmedName = name?.trim()
     if (!trimmedName) throw new Error('Category name is required')
 
     const maxOrder = categories.value.reduce((m, c) => Math.max(m, c.sort_order ?? 0), 0)
-    const newItem = {
+    const newItem: Category = {
       id: `cat-${Date.now()}`,
       name: trimmedName,
       icon: icon.trim(),
@@ -51,7 +52,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     }
 
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('categories')
         .insert({ name: newItem.name, icon: newItem.icon, sort_order: newItem.sort_order })
         .select('*')
@@ -65,7 +66,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     return newItem
   }
 
-  async function update(id, { name, icon }) {
+  async function update(id: string, { name, icon }: { name?: string; icon?: string }): Promise<Category> {
     const idx = categories.value.findIndex(c => c.id === id)
     if (idx === -1) throw new Error('Category not found')
 
@@ -75,7 +76,7 @@ export const useCategoriesStore = defineStore('categories', () => {
     }
 
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('categories')
         .update(patch)
         .eq('id', id)
@@ -90,9 +91,9 @@ export const useCategoriesStore = defineStore('categories', () => {
     return categories.value[idx]
   }
 
-  async function remove(id) {
+  async function remove(id: string): Promise<void> {
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('categories').delete().eq('id', id)
+      const { error } = await supabase!.from('categories').delete().eq('id', id)
       if (error) throw error
     }
     categories.value = categories.value.filter(c => c.id !== id)

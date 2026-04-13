@@ -1,22 +1,22 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import type { ShopSession, SessionItem } from '../types'
 
 export const useSessionStore = defineStore('session', () => {
-  const activeSession = ref(null)
-  const pastSessions = ref([])
+  const activeSession = ref<ShopSession | null>(null)
+  const pastSessions = ref<ShopSession[]>([])
   const loading = ref(false)
-  const sessionItemsById = ref({})
-  const loadingSessionItems = ref({})
+  const sessionItemsById = ref<Record<string, SessionItem[]>>({})
+  const loadingSessionItems = ref<Record<string, boolean>>({})
 
   const hasActiveSession = computed(() => !!activeSession.value)
 
-  // Fetch or create the active session
   async function fetchActive() {
     loading.value = true
     try {
       if (isSupabaseConfigured) {
-        const { data, error } = await supabase
+        const { data, error } = await supabase!
           .from('shop_sessions')
           .select('*')
           .eq('is_active', true)
@@ -28,7 +28,6 @@ export const useSessionStore = defineStore('session', () => {
           await createSession()
         }
       } else {
-        // Local mode — create an in-memory session
         if (!activeSession.value) {
           activeSession.value = {
             id: 'session-' + Date.now(),
@@ -53,7 +52,7 @@ export const useSessionStore = defineStore('session', () => {
 
   async function createSession() {
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('shop_sessions')
         .insert({ is_active: true })
         .select()
@@ -70,35 +69,36 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  async function completeSession(boughtItems) {
+  async function completeSession(boughtItems: Array<{
+    item_id: string
+    bought_amount: number | null
+    requested_amount: number
+    bought_unit: string | null
+    requested_unit: string
+    _name?: string
+  }>) {
     if (!activeSession.value) return
 
     if (isSupabaseConfigured) {
-      // Mark session as completed
-      await supabase
+      await supabase!
         .from('shop_sessions')
-        .update({
-          is_active: false,
-          completed_at: new Date().toISOString(),
-        })
+        .update({ is_active: false, completed_at: new Date().toISOString() })
         .eq('id', activeSession.value.id)
 
-      // Log bought items to purchase_history
       if (boughtItems.length > 0) {
         const historyRecords = boughtItems.map(item => ({
-          session_id: activeSession.value.id,
+          session_id: activeSession.value!.id,
           item_id: item.item_id,
-          amount: item.bought_amount || item.requested_amount,
-          unit: item.bought_unit || item.requested_unit,
+          amount: item.bought_amount ?? item.requested_amount,
+          unit: item.bought_unit ?? item.requested_unit,
         }))
-        await supabase.from('purchase_history').insert(historyRecords)
+        await supabase!.from('purchase_history').insert(historyRecords)
       }
 
-      // Store completed session in pastSessions
-      const completedItems = boughtItems.map(item => ({
-        name: item._name || 'Unknown',
-        amount: item.bought_amount || item.requested_amount,
-        unit: item.bought_unit || item.requested_unit,
+      const completedItems: SessionItem[] = boughtItems.map(item => ({
+        name: item._name ?? 'Unknown',
+        amount: item.bought_amount ?? item.requested_amount,
+        unit: item.bought_unit ?? item.requested_unit,
       }))
 
       pastSessions.value.unshift({
@@ -110,15 +110,12 @@ export const useSessionStore = defineStore('session', () => {
       })
 
       sessionItemsById.value[activeSession.value.id] = completedItems
-
-      // Create new session
       await createSession()
     } else {
-      // Local mode
-      const completedItems = boughtItems.map(item => ({
-        name: item._name || 'Unknown',
-        amount: item.bought_amount || item.requested_amount,
-        unit: item.bought_unit || item.requested_unit,
+      const completedItems: SessionItem[] = boughtItems.map(item => ({
+        name: item._name ?? 'Unknown',
+        amount: item.bought_amount ?? item.requested_amount,
+        unit: item.bought_unit ?? item.requested_unit,
       }))
 
       pastSessions.value.unshift({
@@ -140,7 +137,7 @@ export const useSessionStore = defineStore('session', () => {
 
   async function fetchPastSessions() {
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('shop_sessions')
         .select('*')
         .eq('is_active', false)
@@ -149,57 +146,41 @@ export const useSessionStore = defineStore('session', () => {
       if (error) throw error
       pastSessions.value = data
     }
-    // In local mode, pastSessions is populated by completeSession
   }
 
-  async function fetchSessionItems(sessionId) {
+  async function fetchSessionItems(sessionId: string): Promise<SessionItem[]> {
     if (!sessionId) return []
-    if (sessionItemsById.value[sessionId]) {
-      return sessionItemsById.value[sessionId]
-    }
+    if (sessionItemsById.value[sessionId]) return sessionItemsById.value[sessionId]
 
     if (!isSupabaseConfigured) {
       const localSession = pastSessions.value.find(s => s.id === sessionId)
-      const items = localSession?._items || []
+      const items = localSession?._items ?? []
       sessionItemsById.value[sessionId] = items
       return items
     }
 
-    loadingSessionItems.value = {
-      ...loadingSessionItems.value,
-      [sessionId]: true,
-    }
+    loadingSessionItems.value = { ...loadingSessionItems.value, [sessionId]: true }
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('purchase_history')
-        .select(`
-          amount,
-          unit,
-          item:items(name)
-        `)
+        .select(`amount, unit, item:items(name)`)
         .eq('session_id', sessionId)
         .order('bought_at', { ascending: true })
 
       if (error) throw error
 
-      const items = (data || []).map(entry => ({
-        name: entry.item?.name || 'Unknown',
+      const items: SessionItem[] = (data ?? []).map((entry: { amount: number; unit: string; item: { name: string }[] | { name: string } | null }) => ({
+        name: (Array.isArray(entry.item) ? entry.item[0]?.name : entry.item?.name) ?? 'Unknown',
         amount: entry.amount,
         unit: entry.unit,
       }))
 
-      sessionItemsById.value = {
-        ...sessionItemsById.value,
-        [sessionId]: items,
-      }
+      sessionItemsById.value = { ...sessionItemsById.value, [sessionId]: items }
 
       const sessionIdx = pastSessions.value.findIndex(s => s.id === sessionId)
       if (sessionIdx !== -1) {
-        pastSessions.value[sessionIdx] = {
-          ...pastSessions.value[sessionIdx],
-          _itemCount: items.length,
-        }
+        pastSessions.value[sessionIdx] = { ...pastSessions.value[sessionIdx], _itemCount: items.length }
       }
 
       return items
@@ -207,10 +188,7 @@ export const useSessionStore = defineStore('session', () => {
       console.error('Failed to fetch session items:', e)
       return []
     } finally {
-      loadingSessionItems.value = {
-        ...loadingSessionItems.value,
-        [sessionId]: false,
-      }
+      loadingSessionItems.value = { ...loadingSessionItems.value, [sessionId]: false }
     }
   }
 

@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
@@ -25,7 +25,7 @@ async function submit() {
       signUpSuccess.value = true
     }
   } catch (e) {
-    error.value = e.message || 'Something went wrong'
+    error.value = (e as Error).message || 'Something went wrong'
   } finally {
     loading.value = false
   }

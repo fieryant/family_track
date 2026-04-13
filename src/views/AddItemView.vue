@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useItemsStore } from '../stores/items'
 import { useCategoriesStore } from '../stores/categories'
@@ -10,27 +10,28 @@ import CategoryFilter from '../components/CategoryFilter.vue'
 import EmptyState from '../components/EmptyState.vue'
 import CreateItemDialog from '../components/CreateItemDialog.vue'
 import Toast from '../components/Toast.vue'
+import type { Item } from '../types'
 
 const itemsStore = useItemsStore()
 const categoriesStore = useCategoriesStore()
 const shopListStore = useShopListStore()
 
 const searchQuery = ref('')
-const selectedCategory = ref(null)
+const selectedCategory = ref<string | null>(null)
 const showPresetPicker = ref(false)
-const selectedItem = ref(null)
+const selectedItem = ref<Item | null>(null)
 const toastMessage = ref('')
 const showCreateDialog = ref(false)
 const creatingItem = ref(false)
-const createDialogRef = ref(null)
+const createDialogRef = ref<InstanceType<typeof CreateItemDialog> | null>(null)
 const prefillItemName = ref('')
 
 // Items already in the current list
-function isInList(itemId) {
+function isInList(itemId: string) {
   return shopListStore.listItems.some(i => i.item_id === itemId)
 }
 
-function inListAmountLabel(itemId) {
+function inListAmountLabel(itemId: string) {
   const entry = shopListStore.listItems.find(i => i.item_id === itemId)
   if (!entry) return ''
   return `${entry.requested_amount} ${entry.requested_unit}`
@@ -41,10 +42,18 @@ const frequentItems = computed(() => {
   return itemsStore.items.filter(i => i.is_active).slice(0, 6)
 })
 
+interface CategoryGroup {
+  categoryId: string
+  name: string
+  icon: string
+  sort_order: number
+  items: Item[]
+}
+
 // Filtered items by search + category
 const filteredItemsByCategory = computed(() => {
   const searchResults = itemsStore.search(searchQuery.value)
-  const byCat = {}
+  const byCat: Record<string, CategoryGroup> = {}
 
   searchResults.forEach(item => {
     if (selectedCategory.value && item.category_id !== selectedCategory.value) return
@@ -65,7 +74,7 @@ const filteredItemsByCategory = computed(() => {
   return Object.values(byCat).sort((a, b) => a.sort_order - b.sort_order)
 })
 
-function onItemClick(item) {
+function onItemClick(item: Item) {
   if (isInList(item.id)) return // already in list
   selectedItem.value = item
   showPresetPicker.value = true
@@ -83,7 +92,7 @@ function closeCreateDialog() {
   }
 }
 
-async function handleCreateItemSubmit({ name, categoryId, unitType }) {
+async function handleCreateItemSubmit({ name, categoryId, unitType }: { name: string; categoryId: string | null; unitType: string }) {
   creatingItem.value = true
 
   try {
@@ -112,14 +121,14 @@ onMounted(() => {
   shopListStore.fetch()
 })
 
-async function handleAddToList({ amount, unit }) {
+async function handleAddToList({ amount, unit }: { amount: number; unit: string }) {
   if (!selectedItem.value) return
 
   await shopListStore.addItem({
     itemId: selectedItem.value.id,
     itemName: selectedItem.value.name,
     categoryId: selectedItem.value.category_id,
-    unitType: selectedItem.value.default_unit_type,
+    unitType: selectedItem.value.default_unit_type ?? 'count',
     amount,
     unit,
   })
@@ -193,11 +202,11 @@ async function handleAddToList({ amount, unit }) {
     </EmptyState>
 
     <CreateItemDialog ref="createDialogRef" :show="showCreateDialog" :categories="categoriesStore.sorted"
-      :loading="creatingItem" :prefill-name="prefillItemName" @close="closeCreateDialog"
+      :loading="creatingItem" error="" :prefill-name="prefillItemName" @close="closeCreateDialog"
       @submit="handleCreateItemSubmit" />
 
     <!-- Unit preset picker -->
-    <UnitPresetPicker :show="showPresetPicker" :item="selectedItem" @close="showPresetPicker = false"
+    <UnitPresetPicker :show="showPresetPicker" :item="selectedItem ?? undefined" @close="showPresetPicker = false"
       @confirm="handleAddToList" />
 
     <!-- Toast notification -->

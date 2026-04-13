@@ -2,9 +2,10 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { seedUnits } from '../lib/seedData'
+import type { Unit } from '../types'
 
 export const useUnitsStore = defineStore('units', () => {
-  const units = ref([])
+  const units = ref<Unit[]>([])
   const loading = ref(false)
 
   const sorted = computed(() =>
@@ -15,12 +16,12 @@ export const useUnitsStore = defineStore('units', () => {
   )
 
   const byId = computed(() => {
-    const map = {}
+    const map: Record<string, Unit> = {}
     units.value.forEach(u => { map[u.id] = u })
     return map
   })
 
-  function forType(unitTypeId) {
+  function forType(unitTypeId: string): Unit[] {
     return units.value
       .filter(u => u.unit_type_id === unitTypeId)
       .sort((a, b) => a.sort_order - b.sort_order)
@@ -30,7 +31,7 @@ export const useUnitsStore = defineStore('units', () => {
     loading.value = true
     try {
       if (isSupabaseConfigured) {
-        const { data, error } = await supabase
+        const { data, error } = await supabase!
           .from('units')
           .select('*')
           .order('sort_order')
@@ -47,14 +48,24 @@ export const useUnitsStore = defineStore('units', () => {
     }
   }
 
-  async function create({ unitTypeId, symbol, label, baseFactor = 1 }) {
+  async function create({
+    unitTypeId,
+    symbol,
+    label,
+    baseFactor = 1,
+  }: {
+    unitTypeId: string
+    symbol: string
+    label: string
+    baseFactor?: number
+  }): Promise<Unit> {
     if (!unitTypeId || !symbol?.trim() || !label?.trim()) {
       throw new Error('Unit type, symbol, and label are required')
     }
     const typeUnits = units.value.filter(u => u.unit_type_id === unitTypeId)
     const maxOrder = typeUnits.reduce((m, u) => Math.max(m, u.sort_order ?? 0), 0)
 
-    const newItem = {
+    const newItem: Unit = {
       id: `u-${Date.now()}`,
       unit_type_id: unitTypeId,
       symbol: symbol.trim(),
@@ -64,7 +75,7 @@ export const useUnitsStore = defineStore('units', () => {
     }
 
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('units')
         .insert({
           unit_type_id: newItem.unit_type_id,
@@ -84,7 +95,10 @@ export const useUnitsStore = defineStore('units', () => {
     return newItem
   }
 
-  async function update(id, { symbol, label, baseFactor, unitTypeId }) {
+  async function update(
+    id: string,
+    { symbol, label, baseFactor, unitTypeId }: { symbol?: string; label?: string; baseFactor?: number; unitTypeId?: string }
+  ): Promise<Unit> {
     const idx = units.value.findIndex(u => u.id === id)
     if (idx === -1) throw new Error('Unit not found')
 
@@ -96,7 +110,7 @@ export const useUnitsStore = defineStore('units', () => {
     }
 
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('units')
         .update(patch)
         .eq('id', id)
@@ -111,9 +125,9 @@ export const useUnitsStore = defineStore('units', () => {
     return units.value[idx]
   }
 
-  async function remove(id) {
+  async function remove(id: string): Promise<void> {
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('units').delete().eq('id', id)
+      const { error } = await supabase!.from('units').delete().eq('id', id)
       if (error) throw error
     }
     units.value = units.value.filter(u => u.id !== id)

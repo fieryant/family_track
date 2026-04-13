@@ -42,7 +42,7 @@
   </teleport>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue'
 
 const props = defineProps({
@@ -52,7 +52,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'confirm'])
 
-const amount = ref(null)
+const amount = ref<number | null>(null)
 const unit = ref('')
 
 watch(() => props.item, (item) => {
@@ -61,7 +61,7 @@ watch(() => props.item, (item) => {
 })
 
 function confirm() {
-  if (amount.value > 0) {
+  if (amount.value !== null && amount.value > 0) {
     emit('confirm', {
       amount: amount.value,
       unit: unit.value || props.item?.requested_unit || 'pc',

@@ -11,7 +11,7 @@
         label="Item name"
         placeholder="e.g. Avocados"
         type="text"
-        maxlength="80"
+        :maxlength="80"
         autofocus
       />
 
@@ -32,27 +32,31 @@
   </Modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import Modal from './Modal.vue'
 import FormInput from './FormInput.vue'
 import FormSelect from './FormSelect.vue'
 import { useUnitTypesStore } from '../stores/unitTypes'
+import type { Category } from '../types'
 
-const props = defineProps({
-  show: { type: Boolean, default: false },
-  categories: { type: Array, default: () => [] },
-  loading: { type: Boolean, default: false },
-  error: { type: String, default: '' },
-  prefillName: { type: String, default: '' },
-})
+const props = defineProps<{
+  show: boolean
+  categories: Category[]
+  loading: boolean
+  error: string
+  prefillName: string
+}>()
 
-const emit = defineEmits(['close', 'submit'])
+const emit = defineEmits<{
+  close: []
+  submit: [payload: { name: string; categoryId: string | null; unitType: string }]
+}>()
 
 const unitTypesStore = useUnitTypesStore()
 
 const name = ref('')
-const categoryId = ref(null)
+const categoryId = ref<string | null>(null)
 const unitType = ref('count')
 
 const canSubmit = computed(() => name.value.trim().length > 0)

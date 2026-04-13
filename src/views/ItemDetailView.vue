@@ -70,7 +70,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { useItemsStore } from '../stores/items'
 import { useCategoriesStore } from '../stores/categories'
@@ -87,12 +87,12 @@ const presets = computed(() => itemsStore.presetsForItem(props.id))
 
 const categoryIcon = computed(() => {
   if (!item.value) return '📦'
-  return categoriesStore.byId[item.value.category_id]?.icon || '📦'
+  return categoriesStore.byId[item.value.category_id ?? '']?.icon || '📦'
 })
 
 const categoryName = computed(() => {
   if (!item.value) return 'Unknown'
-  return categoriesStore.byId[item.value.category_id]?.name || 'Unknown'
+  return categoriesStore.byId[item.value.category_id ?? '']?.name || 'Unknown'
 })
 
 // Stub data for demo (in production, pull from purchase_history)

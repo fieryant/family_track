@@ -36,7 +36,7 @@
   </teleport>
 </template>
 
-<script setup>
+<script setup lang="ts">
 defineProps({
   show: { type: Boolean, default: false },
   summary: { type: Object, default: () => ({ bought: 0, partial: 0, pending: 0 }) },

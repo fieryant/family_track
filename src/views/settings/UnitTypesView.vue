@@ -78,19 +78,20 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import Modal from '../../components/Modal.vue'
 import FormInput from '../../components/FormInput.vue'
 import { useUnitTypesStore } from '../../stores/unitTypes'
+import type { UnitType } from '../../types'
 
 const store = useUnitTypesStore()
 
 const showForm = ref(false)
 const showDelete = ref(false)
 const saving = ref(false)
-const editing = ref(null)
-const deleteTarget = ref(null)
+const editing = ref<UnitType | null>(null)
+const deleteTarget = ref<UnitType | null>(null)
 
 const form = reactive({ name: '', label: '' })
 
@@ -101,7 +102,7 @@ function openAdd() {
   showForm.value = true
 }
 
-function openEdit(ut) {
+function openEdit(ut: UnitType) {
   editing.value = ut
   form.name = ut.name
   form.label = ut.label
@@ -129,12 +130,13 @@ async function save() {
   }
 }
 
-function confirmDelete(ut) {
+function confirmDelete(ut: UnitType) {
   deleteTarget.value = ut
   showDelete.value = true
 }
 
 async function doDelete() {
+  if (!deleteTarget.value) return
   saving.value = true
   try {
     await store.remove(deleteTarget.value.id)

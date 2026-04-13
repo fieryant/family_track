@@ -10,7 +10,7 @@
       @click="toggle"
     >
       <span :class="selectedLabel ? 'text-slate-100' : 'text-slate-500'">
-        {{ selectedLabel || placeholder }}
+        {{ selectedLabel || resolvedPlaceholder }}
       </span>
       <svg
         class="h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200"
@@ -44,7 +44,7 @@
         >
           <div class="max-h-60 overflow-y-auto overscroll-contain py-1">
             <button
-              v-for="opt in options"
+              v-for="opt in resolvedOptions"
               :key="String(opt.value)"
               type="button"
               class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition"
@@ -74,29 +74,37 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
 
-const props = defineProps({
-  label: { type: String, required: true },
-  modelValue: { default: '' },
-  options: { type: Array, default: () => [] }, // [{ value, label }]
-  placeholder: { type: String, default: 'Select…' },
-})
+interface SelectOption {
+  value: unknown
+  label: string
+}
 
-const emit = defineEmits(['update:modelValue'])
+const props = defineProps<{
+  label: string
+  modelValue?: unknown
+  options?: SelectOption[]
+  placeholder?: string
+}>()
+
+const emit = defineEmits<{ 'update:modelValue': [value: unknown] }>()
 
 const open = ref(false)
-const triggerRef = ref(null)
-const dropdownRef = ref(null)
-const dropdownStyle = ref({})
+const triggerRef = ref<HTMLButtonElement | null>(null)
+const dropdownRef = ref<HTMLElement | null>(null)
+const dropdownStyle = ref<Record<string, string>>({})
+
+const resolvedOptions = computed(() => props.options ?? [])
+const resolvedPlaceholder = computed(() => props.placeholder ?? 'Select…')
 
 const selectedLabel = computed(() => {
-  const found = props.options.find(o => String(o.value) === String(props.modelValue))
+  const found = resolvedOptions.value.find(o => String(o.value) === String(props.modelValue))
   return found?.label ?? ''
 })
 
-function isSelected(value) {
+function isSelected(value: unknown) {
   return String(value) === String(props.modelValue)
 }
 
@@ -107,9 +115,9 @@ function updatePosition() {
   const viewportH = window.innerHeight
   const spaceBelow = viewportH - rect.bottom - 8
   const spaceAbove = rect.top - 8
-  const dropH = Math.min(props.options.length * 44 + 8, 248)
+  const dropH = Math.min(resolvedOptions.value.length * 44 + 8, 248)
 
-  const style = {
+  const style: Record<string, string> = {
     left: `${rect.left}px`,
     width: `${rect.width}px`,
   }
@@ -133,19 +141,19 @@ async function toggle() {
   updatePosition()
 }
 
-function select(value) {
+function select(value: unknown) {
   emit('update:modelValue', value)
   open.value = false
 }
 
-function onClickOutside(e) {
+function onClickOutside(e: MouseEvent) {
   if (!open.value) return
-  if (triggerRef.value?.contains(e.target)) return
-  if (dropdownRef.value?.contains(e.target)) return
+  if (triggerRef.value?.contains(e.target as Node)) return
+  if (dropdownRef.value?.contains(e.target as Node)) return
   open.value = false
 }
 
-function onKeydown(e) {
+function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape' && open.value) open.value = false
 }
 

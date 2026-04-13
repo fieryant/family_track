@@ -88,13 +88,14 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import Modal from '../../components/Modal.vue'
 import FormInput from '../../components/FormInput.vue'
 import FormSelect from '../../components/FormSelect.vue'
 import { useUnitTypesStore } from '../../stores/unitTypes'
 import { useUnitsStore } from '../../stores/units'
+import type { Unit } from '../../types'
 
 const unitTypesStore = useUnitTypesStore()
 const unitsStore = useUnitsStore()
@@ -106,8 +107,8 @@ const unitTypeOptions = computed(() =>
 const showForm = ref(false)
 const showDelete = ref(false)
 const saving = ref(false)
-const editing = ref(null)
-const deleteTarget = ref(null)
+const editing = ref<Unit | null>(null)
+const deleteTarget = ref<Unit | null>(null)
 
 const form = reactive({ unitTypeId: '', symbol: '', label: '', baseFactor: '1' })
 
@@ -120,7 +121,7 @@ function openAdd() {
   showForm.value = true
 }
 
-function openEdit(unit) {
+function openEdit(unit: Unit) {
   editing.value = unit
   form.unitTypeId = unit.unit_type_id
   form.symbol = unit.symbol
@@ -141,7 +142,7 @@ async function save() {
       unitTypeId: form.unitTypeId,
       symbol: form.symbol,
       label: form.label,
-      baseFactor: form.baseFactor,
+      baseFactor: Number(form.baseFactor),
     }
     if (editing.value) {
       await unitsStore.update(editing.value.id, payload)
@@ -156,12 +157,13 @@ async function save() {
   }
 }
 
-function confirmDelete(unit) {
+function confirmDelete(unit: Unit) {
   deleteTarget.value = unit
   showDelete.value = true
 }
 
 async function doDelete() {
+  if (!deleteTarget.value) return
   saving.value = true
   try {
     await unitsStore.remove(deleteTarget.value.id)

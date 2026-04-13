@@ -71,14 +71,14 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useSessionStore } from '../stores/session'
 
 const sessionStore = useSessionStore()
-const expandedSession = ref(null)
+const expandedSession = ref<string | null>(null)
 
-async function toggleSession(id) {
+async function toggleSession(id: string) {
   if (expandedSession.value === id) {
     expandedSession.value = null
     return
@@ -88,11 +88,11 @@ async function toggleSession(id) {
   await sessionStore.fetchSessionItems(id)
 }
 
-function sessionItems(sessionId) {
+function sessionItems(sessionId: string) {
   return sessionStore.sessionItemsById[sessionId] || []
 }
 
-function formatDate(dateStr) {
+function formatDate(dateStr: string | null | undefined) {
   if (!dateStr) return '—'
   const d = new Date(dateStr)
   return d.toLocaleDateString('en-US', {

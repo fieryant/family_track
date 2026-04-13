@@ -24,7 +24,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 
 defineProps({
@@ -33,12 +33,12 @@ defineProps({
 })
 
 const emit = defineEmits(['update:modelValue'])
-const searchInput = ref(null)
+const searchInput = ref<HTMLInputElement | null>(null)
 
-let debounceTimer = null
-function onInput(e) {
-  const val = e.target.value
-  clearTimeout(debounceTimer)
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+function onInput(e: Event) {
+  const val = (e.target as HTMLInputElement).value
+  if (debounceTimer) clearTimeout(debounceTimer)
   debounceTimer = setTimeout(() => {
     emit('update:modelValue', val)
   }, 200)

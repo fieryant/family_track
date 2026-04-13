@@ -3,23 +3,23 @@ import { ref, computed } from 'vue'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useSessionStore } from './session'
 import { useCategoriesStore } from './categories'
+import type { ShopListItem, CategoryGroup, ShopListStatus } from '../types'
 
 export const useShopListStore = defineStore('shopList', () => {
-  const listItems = ref([])
+  const listItems = ref<ShopListItem[]>([])
   const loading = ref(false)
   const shoppingMode = ref(false)
 
-  // Items grouped by category
-  const groupedByCategory = computed(() => {
+  const groupedByCategory = computed((): CategoryGroup[] => {
     const categoriesStore = useCategoriesStore()
-    const groups = {}
+    const groups: Record<string, CategoryGroup> = {}
 
     listItems.value.forEach(item => {
-      const catId = item._categoryId || 'uncategorized'
+      const catId = item._categoryId ?? 'uncategorized'
       if (!groups[catId]) {
         const cat = categoriesStore.byId[catId]
         groups[catId] = {
-          category: cat || { id: catId, name: 'Other', icon: '📦', sort_order: 999 },
+          category: cat ?? { id: catId, name: 'Other', icon: '📦', sort_order: 999 },
           items: [],
         }
       }
@@ -31,7 +31,6 @@ export const useShopListStore = defineStore('shopList', () => {
     )
   })
 
-  // Summary counts
   const summary = computed(() => {
     const total = listItems.value.length
     const bought = listItems.value.filter(i => i.status === 'bought').length
@@ -41,7 +40,6 @@ export const useShopListStore = defineStore('shopList', () => {
     return { total, bought, partial, pending, removed }
   })
 
-  // Fetch list items for the active session
   async function fetch() {
     const sessionStore = useSessionStore()
     if (!sessionStore.activeSession) return
@@ -49,24 +47,20 @@ export const useShopListStore = defineStore('shopList', () => {
     loading.value = true
     try {
       if (isSupabaseConfigured) {
-        const { data, error } = await supabase
+        const { data, error } = await supabase!
           .from('shop_list_items')
-          .select(`
-            *,
-            item:items(name, category_id, default_unit_type)
-          `)
+          .select(`*, item:items(name, category_id, default_unit_type)`)
           .eq('session_id', sessionStore.activeSession.id)
           .order('added_at')
 
         if (error) throw error
-        listItems.value = data.map(d => ({
+        listItems.value = (data as unknown as (ShopListItem & { item: { name: string; category_id: string | null; default_unit_type: string } | null })[]).map(d => ({
           ...d,
-          _name: d.item?.name || 'Unknown',
-          _categoryId: d.item?.category_id || null,
-          _unitType: d.item?.default_unit_type || 'count',
+          _name: d.item?.name ?? 'Unknown',
+          _categoryId: d.item?.category_id ?? null,
+          _unitType: d.item?.default_unit_type ?? 'count',
         }))
       }
-      // In local mode, listItems is managed entirely in-memory
     } catch (e) {
       console.error('Failed to fetch shop list:', e)
     } finally {
@@ -74,16 +68,28 @@ export const useShopListStore = defineStore('shopList', () => {
     }
   }
 
-  // Add an item to the shop list
-  async function addItem({ itemId, itemName, categoryId, unitType, amount, unit }) {
+  async function addItem({
+    itemId,
+    itemName,
+    categoryId,
+    unitType,
+    amount,
+    unit,
+  }: {
+    itemId: string
+    itemName: string
+    categoryId: string | null
+    unitType: string
+    amount: number
+    unit: string
+  }): Promise<ShopListItem | undefined> {
     const sessionStore = useSessionStore()
     if (!sessionStore.activeSession) return
 
-    // Check if already in list
     const exists = listItems.value.find(i => i.item_id === itemId)
     if (exists) return exists
 
-    const newItem = {
+    const newItem: ShopListItem = {
       id: 'sli-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
       session_id: sessionStore.activeSession.id,
       item_id: itemId,
@@ -101,7 +107,7 @@ export const useShopListStore = defineStore('shopList', () => {
     }
 
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('shop_list_items')
         .insert({
           session_id: newItem.session_id,
@@ -109,29 +115,30 @@ export const useShopListStore = defineStore('shopList', () => {
           requested_amount: amount,
           requested_unit: unit,
         })
-        .select(`
-          *,
-          item:items(name, category_id, default_unit_type)
-        `)
+        .select(`*, item:items(name, category_id, default_unit_type)`)
         .single()
 
       if (error) throw error
-      const mapped = {
+      const mapped: ShopListItem = {
         ...data,
-        _name: data.item?.name || itemName,
-        _categoryId: data.item?.category_id || categoryId,
-        _unitType: data.item?.default_unit_type || unitType,
+        _name: data.item?.name ?? itemName,
+        _categoryId: data.item?.category_id ?? categoryId,
+        _unitType: data.item?.default_unit_type ?? unitType,
       }
       listItems.value.push(mapped)
       return mapped
-    } else {
-      listItems.value.push(newItem)
-      return newItem
     }
+
+    listItems.value.push(newItem)
+    return newItem
   }
 
-  // Update item status
-  async function updateStatus(listItemId, status, boughtAmount = null, boughtUnit = null) {
+  async function updateStatus(
+    listItemId: string,
+    status: ShopListStatus,
+    boughtAmount: number | null = null,
+    boughtUnit: string | null = null
+  ) {
     const idx = listItems.value.findIndex(i => i.id === listItemId)
     if (idx === -1) return
 
@@ -144,41 +151,31 @@ export const useShopListStore = defineStore('shopList', () => {
     }
 
     if (isSupabaseConfigured) {
-      const update = { status }
+      const update: Partial<ShopListItem> = { status }
       if (boughtAmount !== null) update.bought_amount = boughtAmount
       if (boughtUnit !== null) update.bought_unit = boughtUnit
 
-      await supabase
-        .from('shop_list_items')
-        .update(update)
-        .eq('id', listItemId)
+      await supabase!.from('shop_list_items').update(update).eq('id', listItemId)
     }
   }
 
-  // Remove item from list
-  async function removeItem(listItemId) {
+  async function removeItem(listItemId: string) {
     listItems.value = listItems.value.filter(i => i.id !== listItemId)
-
     if (isSupabaseConfigured) {
-      await supabase
-        .from('shop_list_items')
-        .delete()
-        .eq('id', listItemId)
+      await supabase!.from('shop_list_items').delete().eq('id', listItemId)
     }
   }
 
-  // Toggle bought status (for shopping mode quick-tap)
-  async function toggleBought(listItemId) {
+  async function toggleBought(listItemId: string) {
     const item = listItems.value.find(i => i.id === listItemId)
     if (!item) return
-    const newStatus = item.status === 'bought' ? 'pending' : 'bought'
+    const newStatus: ShopListStatus = item.status === 'bought' ? 'pending' : 'bought'
     const boughtAmount = newStatus === 'bought' ? item.requested_amount : null
     const boughtUnit = newStatus === 'bought' ? item.requested_unit : null
     await updateStatus(listItemId, newStatus, boughtAmount, boughtUnit)
   }
 
-  // Carry pending items into the next session after completion
-  async function carryPendingToSession(sessionId) {
+  async function carryPendingToSession(sessionId: string) {
     const pendingItems = listItems.value.filter(i => i.status === 'pending')
 
     if (pendingItems.length === 0) {
@@ -187,7 +184,7 @@ export const useShopListStore = defineStore('shopList', () => {
     }
 
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('shop_list_items')
         .insert(
           pendingItems.map(item => ({
@@ -197,18 +194,15 @@ export const useShopListStore = defineStore('shopList', () => {
             requested_unit: item.requested_unit,
           }))
         )
-        .select(`
-          *,
-          item:items(name, category_id, default_unit_type)
-        `)
+        .select(`*, item:items(name, category_id, default_unit_type)`)
 
       if (error) throw error
 
-      listItems.value = data.map(d => ({
+      listItems.value = (data as unknown as (ShopListItem & { item: { name: string; category_id: string | null; default_unit_type: string } | null })[]).map(d => ({
         ...d,
-        _name: d.item?.name || 'Unknown',
-        _categoryId: d.item?.category_id || null,
-        _unitType: d.item?.default_unit_type || 'count',
+        _name: d.item?.name ?? 'Unknown',
+        _categoryId: d.item?.category_id ?? null,
+        _unitType: d.item?.default_unit_type ?? 'count',
       }))
       return
     }
@@ -217,19 +211,17 @@ export const useShopListStore = defineStore('shopList', () => {
       ...item,
       id: 'sli-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
       session_id: sessionId,
-      status: 'pending',
+      status: 'pending' as ShopListStatus,
       bought_amount: null,
       bought_unit: null,
       updated_at: new Date().toISOString(),
     }))
   }
 
-  // Clear the list (after session complete)
   function clearList() {
     listItems.value = []
   }
 
-  // Toggle shopping mode
   function toggleShoppingMode() {
     shoppingMode.value = !shoppingMode.value
   }

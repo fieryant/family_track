@@ -65,7 +65,7 @@
   </teleport>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useItemsStore } from '../stores/items'
 import { useUnitsStore } from '../stores/units'
@@ -77,7 +77,12 @@ const props = defineProps({
   item: { type: Object, default: null },
 })
 
-const emit = defineEmits(['close', 'confirm'])
+import type { Item, UnitPreset } from '../types'
+
+const emit = defineEmits<{
+  close: []
+  confirm: [payload: { amount: number; unit: string }]
+}>()
 const itemsStore = useItemsStore()
 const unitsStore = useUnitsStore()
 const unitTypesStore = useUnitTypesStore()
@@ -87,52 +92,45 @@ onMounted(() => {
   if (!unitTypesStore.unitTypes.length) unitTypesStore.fetch()
 })
 
-const selectedPreset = ref(null)
-const customAmount = ref(null)
+const selectedPreset = ref<UnitPreset | null>(null)
+const customAmount = ref<number | null>(null)
 const customUnit = ref('')
 
-const presets = computed(() => {
+const presets = computed((): UnitPreset[] => {
   if (!props.item) return []
-  return itemsStore.presetsForItem(props.item.id)
+  return itemsStore.presetsForItem((props.item as Item).id)
 })
 
 const unitOptionsMapped = computed(() => {
   if (!props.item) return []
-  // Supabase mode: unit_type_id is a UUID → look up by id
-  // Seed mode: default_unit_type is a name string → look up by name
-  const unitType = props.item.unit_type_id
-    ? unitTypesStore.byId[props.item.unit_type_id]
-    : unitTypesStore.unitTypes.find(t => t.name === props.item.default_unit_type)
+  const item = props.item as Item
+  const unitType = item.unit_type_id
+    ? unitTypesStore.byId[item.unit_type_id]
+    : unitTypesStore.unitTypes.find(t => t.name === item.default_unit_type)
   if (!unitType) return []
   return unitsStore.forType(unitType.id).map(u => ({ value: u.symbol, label: u.symbol }))
 })
 
-const canConfirm = computed(() => {
-  return selectedPreset.value || (customAmount.value > 0 && customUnit.value)
-})
+const canConfirm = computed(() =>
+  selectedPreset.value !== null || (customAmount.value !== null && customAmount.value > 0 && customUnit.value)
+)
 
 watch(() => props.item, () => {
   selectedPreset.value = null
   customAmount.value = null
-  customUnit.value = unitOptionsMapped.value[0]?.value || ''
+  customUnit.value = unitOptionsMapped.value[0]?.value as string || ''
 })
 
-function selectPreset(preset) {
+function selectPreset(preset: UnitPreset) {
   selectedPreset.value = preset
   customAmount.value = null
 }
 
 function confirm() {
   if (selectedPreset.value) {
-    emit('confirm', {
-      amount: selectedPreset.value.amount,
-      unit: selectedPreset.value.unit,
-    })
-  } else if (customAmount.value > 0 && customUnit.value) {
-    emit('confirm', {
-      amount: customAmount.value,
-      unit: customUnit.value,
-    })
+    emit('confirm', { amount: selectedPreset.value.amount, unit: selectedPreset.value.unit })
+  } else if (customAmount.value !== null && customAmount.value > 0 && customUnit.value) {
+    emit('confirm', { amount: customAmount.value, unit: customUnit.value })
   }
 }
 </script>

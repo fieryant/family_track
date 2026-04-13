@@ -2,9 +2,10 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { seedUnitTypes } from '../lib/seedData'
+import type { UnitType } from '../types'
 
 export const useUnitTypesStore = defineStore('unitTypes', () => {
-  const unitTypes = ref([])
+  const unitTypes = ref<UnitType[]>([])
   const loading = ref(false)
 
   const sorted = computed(() =>
@@ -12,7 +13,7 @@ export const useUnitTypesStore = defineStore('unitTypes', () => {
   )
 
   const byId = computed(() => {
-    const map = {}
+    const map: Record<string, UnitType> = {}
     unitTypes.value.forEach(ut => { map[ut.id] = ut })
     return map
   })
@@ -21,7 +22,7 @@ export const useUnitTypesStore = defineStore('unitTypes', () => {
     loading.value = true
     try {
       if (isSupabaseConfigured) {
-        const { data, error } = await supabase
+        const { data, error } = await supabase!
           .from('unit_types')
           .select('*')
           .order('sort_order')
@@ -38,13 +39,13 @@ export const useUnitTypesStore = defineStore('unitTypes', () => {
     }
   }
 
-  async function create({ name, label }) {
+  async function create({ name, label }: { name: string; label: string }): Promise<UnitType> {
     const trimmedName = name?.trim()
     const trimmedLabel = label?.trim()
     if (!trimmedName || !trimmedLabel) throw new Error('Name and label are required')
 
     const maxOrder = unitTypes.value.reduce((m, ut) => Math.max(m, ut.sort_order ?? 0), 0)
-    const newItem = {
+    const newItem: UnitType = {
       id: `ut-${Date.now()}`,
       name: trimmedName,
       label: trimmedLabel,
@@ -52,7 +53,7 @@ export const useUnitTypesStore = defineStore('unitTypes', () => {
     }
 
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('unit_types')
         .insert({ name: newItem.name, label: newItem.label, sort_order: newItem.sort_order })
         .select('*')
@@ -66,7 +67,7 @@ export const useUnitTypesStore = defineStore('unitTypes', () => {
     return newItem
   }
 
-  async function update(id, { name, label }) {
+  async function update(id: string, { name, label }: { name?: string; label?: string }): Promise<UnitType> {
     const idx = unitTypes.value.findIndex(ut => ut.id === id)
     if (idx === -1) throw new Error('Unit type not found')
 
@@ -76,7 +77,7 @@ export const useUnitTypesStore = defineStore('unitTypes', () => {
     }
 
     if (isSupabaseConfigured) {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('unit_types')
         .update(patch)
         .eq('id', id)
@@ -91,9 +92,9 @@ export const useUnitTypesStore = defineStore('unitTypes', () => {
     return unitTypes.value[idx]
   }
 
-  async function remove(id) {
+  async function remove(id: string): Promise<void> {
     if (isSupabaseConfigured) {
-      const { error } = await supabase.from('unit_types').delete().eq('id', id)
+      const { error } = await supabase!.from('unit_types').delete().eq('id', id)
       if (error) throw error
     }
     unitTypes.value = unitTypes.value.filter(ut => ut.id !== id)

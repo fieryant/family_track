@@ -15,11 +15,13 @@
   </div>
 </template>
 
-<script setup>
-defineProps({
-  modelValue: { type: String, default: null },
-  categories: { type: Array, default: () => [] },
-})
+<script setup lang="ts">
+import type { Category } from '../types'
 
-defineEmits(['update:modelValue'])
+defineProps<{
+  modelValue: string | null
+  categories: Category[]
+}>()
+
+defineEmits<{ 'update:modelValue': [value: string | null] }>()
 </script>

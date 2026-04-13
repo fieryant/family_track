@@ -12,7 +12,7 @@
   </teleport>
 </template>
 
-<script setup>
+<script setup lang="ts">
 defineProps({
   show: { type: Boolean, default: false },
 })

@@ -78,19 +78,20 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import Modal from '../../components/Modal.vue'
 import FormInput from '../../components/FormInput.vue'
 import { useCategoriesStore } from '../../stores/categories'
+import type { Category } from '../../types'
 
 const store = useCategoriesStore()
 
 const showForm = ref(false)
 const showDelete = ref(false)
 const saving = ref(false)
-const editing = ref(null)
-const deleteTarget = ref(null)
+const editing = ref<Category | null>(null)
+const deleteTarget = ref<Category | null>(null)
 
 const form = reactive({ name: '', icon: '' })
 
@@ -101,7 +102,7 @@ function openAdd() {
   showForm.value = true
 }
 
-function openEdit(cat) {
+function openEdit(cat: Category) {
   editing.value = cat
   form.name = cat.name
   form.icon = cat.icon ?? ''
@@ -129,12 +130,13 @@ async function save() {
   }
 }
 
-function confirmDelete(cat) {
+function confirmDelete(cat: Category) {
   deleteTarget.value = cat
   showDelete.value = true
 }
 
 async function doDelete() {
+  if (!deleteTarget.value) return
   saving.value = true
   try {
     await store.remove(deleteTarget.value.id)

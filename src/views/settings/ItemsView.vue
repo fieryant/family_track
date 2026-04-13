@@ -110,7 +110,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import Modal from '../../components/Modal.vue'
 import FormInput from '../../components/FormInput.vue'
@@ -118,6 +118,7 @@ import FormSelect from '../../components/FormSelect.vue'
 import { useItemsStore } from '../../stores/items'
 import { useCategoriesStore } from '../../stores/categories'
 import { useUnitTypesStore } from '../../stores/unitTypes'
+import type { Item } from '../../types'
 
 const itemsStore = useItemsStore()
 const categoriesStore = useCategoriesStore()
@@ -126,8 +127,8 @@ const unitTypesStore = useUnitTypesStore()
 const showForm = ref(false)
 const showDelete = ref(false)
 const saving = ref(false)
-const editing = ref(null)
-const deleteTarget = ref(null)
+const editing = ref<Item | null>(null)
+const deleteTarget = ref<Item | null>(null)
 const searchQuery = ref('')
 
 const defaultUnitType = () => unitTypesStore.sorted[0]?.name ?? 'count'
@@ -149,7 +150,7 @@ const filteredItems = computed(() => {
   return all.filter(i => i.name.toLowerCase().includes(q))
 })
 
-function categoryName(catId) {
+function categoryName(catId: string | null | undefined) {
   if (!catId) return 'Uncategorized'
   return categoriesStore.byId[catId]?.name ?? 'Uncategorized'
 }
@@ -163,7 +164,7 @@ function openAdd() {
   showForm.value = true
 }
 
-function openEdit(item) {
+function openEdit(item: Item) {
   editing.value = item
   form.name = item.name
   form.categoryId = item.category_id ?? ''
@@ -203,12 +204,13 @@ async function save() {
   }
 }
 
-function confirmDelete(item) {
+function confirmDelete(item: Item) {
   deleteTarget.value = item
   showDelete.value = true
 }
 
 async function doDelete() {
+  if (!deleteTarget.value) return
   saving.value = true
   try {
     await itemsStore.removeItem(deleteTarget.value.id)
