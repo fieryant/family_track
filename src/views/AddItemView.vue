@@ -92,7 +92,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useItemsStore } from '../stores/items'
 import { useCategoriesStore } from '../stores/categories'
 import { useShopListStore } from '../stores/shopList'
@@ -198,6 +198,12 @@ async function handleCreateItemSubmit({ name, categoryId, unitType }) {
     creatingItem.value = false
   }
 }
+
+onMounted(() => {
+  categoriesStore.fetch()
+  itemsStore.fetch()
+  shopListStore.fetch()
+})
 
 async function handleAddToList({ amount, unit }) {
   if (!selectedItem.value) return
