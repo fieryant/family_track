@@ -34,7 +34,7 @@ function isInList(itemId: string) {
 function inListAmountLabel(itemId: string) {
   const entry = shopListStore.listItems.find(i => i.item_id === itemId)
   if (!entry) return ''
-  return `${entry.requested_amount} ${entry.requested_unit}`
+  return `${entry.requested_amount} ${entry._requestedUnitSymbol}`
 }
 
 // Frequently bought items (stub: just the first 6 items for now)
@@ -92,14 +92,14 @@ function closeCreateDialog() {
   }
 }
 
-async function handleCreateItemSubmit({ name, categoryId, unitType }: { name: string; categoryId: string | null; unitType: string }) {
+async function handleCreateItemSubmit({ name, categoryId, unitTypeId }: { name: string; categoryId: string | null; unitTypeId: string }) {
   creatingItem.value = true
 
   try {
     const item = await itemsStore.createItem({
       name,
       categoryId,
-      unitType,
+      unitTypeId,
     })
 
     closeCreateDialog()
@@ -121,16 +121,16 @@ onMounted(() => {
   shopListStore.fetch()
 })
 
-async function handleAddToList({ amount, unit }: { amount: number; unit: string }) {
+async function handleAddToList({ amount, unit_id }: { amount: number; unit_id: string }) {
   if (!selectedItem.value) return
 
   await shopListStore.addItem({
     itemId: selectedItem.value.id,
     itemName: selectedItem.value.name,
     categoryId: selectedItem.value.category_id,
-    unitType: selectedItem.value.default_unit_type ?? 'count',
+    unitTypeId: selectedItem.value.unit_type_id ?? null,
     amount,
-    unit,
+    unitId: unit_id,
   })
 
   showPresetPicker.value = false

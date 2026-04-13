@@ -73,9 +73,11 @@ export const useSessionStore = defineStore('session', () => {
     item_id: string
     bought_amount: number | null
     requested_amount: number
-    bought_unit: string | null
-    requested_unit: string
+    bought_unit_id: string | null
+    requested_unit_id: string
     _name?: string
+    _requestedUnitSymbol?: string
+    _boughtUnitSymbol?: string | null
   }>) {
     if (!activeSession.value) return
 
@@ -90,7 +92,7 @@ export const useSessionStore = defineStore('session', () => {
           session_id: activeSession.value!.id,
           item_id: item.item_id,
           amount: item.bought_amount ?? item.requested_amount,
-          unit: item.bought_unit ?? item.requested_unit,
+          unit_id: item.bought_unit_id ?? item.requested_unit_id,
         }))
         await supabase!.from('purchase_history').insert(historyRecords)
       }
@@ -98,7 +100,7 @@ export const useSessionStore = defineStore('session', () => {
       const completedItems: SessionItem[] = boughtItems.map(item => ({
         name: item._name ?? 'Unknown',
         amount: item.bought_amount ?? item.requested_amount,
-        unit: item.bought_unit ?? item.requested_unit,
+        unit: item._boughtUnitSymbol ?? item._requestedUnitSymbol ?? '',
       }))
 
       pastSessions.value.unshift({
@@ -115,7 +117,7 @@ export const useSessionStore = defineStore('session', () => {
       const completedItems: SessionItem[] = boughtItems.map(item => ({
         name: item._name ?? 'Unknown',
         amount: item.bought_amount ?? item.requested_amount,
-        unit: item.bought_unit ?? item.requested_unit,
+        unit: item._boughtUnitSymbol ?? item._requestedUnitSymbol ?? '',
       }))
 
       pastSessions.value.unshift({
@@ -164,16 +166,21 @@ export const useSessionStore = defineStore('session', () => {
     try {
       const { data, error } = await supabase!
         .from('purchase_history')
-        .select(`amount, unit, item:items(name)`)
+        .select(`amount, unit_id, unit:units(symbol), item:items(name)`)
         .eq('session_id', sessionId)
         .order('bought_at', { ascending: true })
 
       if (error) throw error
 
-      const items: SessionItem[] = (data ?? []).map((entry: { amount: number; unit: string; item: { name: string }[] | { name: string } | null }) => ({
+      const items: SessionItem[] = (data ?? []).map((entry: {
+        amount: number
+        unit_id: string
+        unit: { symbol: string }[] | { symbol: string } | null
+        item: { name: string }[] | { name: string } | null
+      }) => ({
         name: (Array.isArray(entry.item) ? entry.item[0]?.name : entry.item?.name) ?? 'Unknown',
         amount: entry.amount,
-        unit: entry.unit,
+        unit: (Array.isArray(entry.unit) ? entry.unit[0]?.symbol : entry.unit?.symbol) ?? '',
       }))
 
       sessionItemsById.value = { ...sessionItemsById.value, [sessionId]: items }

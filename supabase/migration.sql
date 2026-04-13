@@ -60,28 +60,28 @@ create table if not exists shop_sessions (
 
 -- Live items in the current shopping list
 create table if not exists shop_list_items (
-  id               uuid primary key default gen_random_uuid(),
-  session_id       uuid not null references shop_sessions(id) on delete cascade,
-  item_id          uuid not null references items(id) on delete cascade,
-  requested_amount numeric not null,
-  requested_unit   text not null,
-  status           text not null default 'pending', -- 'pending' | 'bought' | 'partial' | 'removed'
-  bought_amount    numeric,
-  bought_unit      text,
-  note             text,
-  added_at         timestamptz not null default now(),
-  updated_at       timestamptz not null default now(),
+  id                  uuid primary key default gen_random_uuid(),
+  session_id          uuid not null references shop_sessions(id) on delete cascade,
+  item_id             uuid not null references items(id) on delete cascade,
+  requested_amount    numeric not null,
+  requested_unit_id   uuid not null references units(id) on delete restrict,
+  status              text not null default 'pending', -- 'pending' | 'bought' | 'partial' | 'removed'
+  bought_amount       numeric,
+  bought_unit_id      uuid references units(id) on delete restrict,
+  note                text,
+  added_at            timestamptz not null default now(),
+  updated_at          timestamptz not null default now(),
   unique (session_id, item_id)
 );
 
 -- Immutable purchase log (used for avg usage and frequency ranking)
 create table if not exists purchase_history (
-  id        uuid primary key default gen_random_uuid(),
+  id         uuid primary key default gen_random_uuid(),
   session_id uuid not null references shop_sessions(id) on delete cascade,
-  item_id   uuid not null references items(id) on delete cascade,
-  amount    numeric not null,
-  unit      text not null,
-  bought_at timestamptz not null default now()
+  item_id    uuid not null references items(id) on delete cascade,
+  amount     numeric not null,
+  unit_id    uuid not null references units(id) on delete restrict,
+  bought_at  timestamptz not null default now()
 );
 
 -- Indexes for common queries
@@ -92,7 +92,9 @@ create index if not exists idx_unit_presets_item on unit_presets(item_id);
 create index if not exists idx_unit_presets_unit on unit_presets(unit_id);
 create index if not exists idx_shop_list_items_session on shop_list_items(session_id);
 create index if not exists idx_shop_list_items_item on shop_list_items(item_id);
+create index if not exists idx_shop_list_items_req_unit on shop_list_items(requested_unit_id);
 create index if not exists idx_purchase_history_item on purchase_history(item_id);
+create index if not exists idx_purchase_history_unit on purchase_history(unit_id);
 create index if not exists idx_purchase_history_bought_at on purchase_history(bought_at);
 
 -- Auto-update updated_at on shop_list_items

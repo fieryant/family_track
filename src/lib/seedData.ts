@@ -42,57 +42,57 @@ export const seedCategories: Category[] = [
 
 export const seedItems: Item[] = [
   // Produce
-  { id: 'item-tomato',    category_id: 'cat-produce',    name: 'Tomatoes',     default_unit_type: 'weight', is_active: true, sort_order: 1 },
-  { id: 'item-onion',     category_id: 'cat-produce',    name: 'Onions',       default_unit_type: 'weight', is_active: true, sort_order: 2 },
-  { id: 'item-potato',    category_id: 'cat-produce',    name: 'Potatoes',     default_unit_type: 'weight', is_active: true, sort_order: 3 },
-  { id: 'item-garlic',    category_id: 'cat-produce',    name: 'Garlic',       default_unit_type: 'count',  is_active: true, sort_order: 4 },
-  { id: 'item-lemon',     category_id: 'cat-produce',    name: 'Lemons',       default_unit_type: 'count',  is_active: true, sort_order: 5 },
-  { id: 'item-banana',    category_id: 'cat-produce',    name: 'Bananas',      default_unit_type: 'count',  is_active: true, sort_order: 6 },
-  { id: 'item-apple',     category_id: 'cat-produce',    name: 'Apples',       default_unit_type: 'weight', is_active: true, sort_order: 7 },
-  { id: 'item-carrot',    category_id: 'cat-produce',    name: 'Carrots',      default_unit_type: 'weight', is_active: true, sort_order: 8 },
-  { id: 'item-cucumber',  category_id: 'cat-produce',    name: 'Cucumbers',    default_unit_type: 'count',  is_active: true, sort_order: 9 },
-  { id: 'item-pepper',    category_id: 'cat-produce',    name: 'Bell Peppers', default_unit_type: 'count',  is_active: true, sort_order: 10 },
+  { id: 'item-tomato',    category_id: 'cat-produce',    name: 'Tomatoes',     unit_type_id: 'ut-weight', is_active: true, sort_order: 1 },
+  { id: 'item-onion',     category_id: 'cat-produce',    name: 'Onions',       unit_type_id: 'ut-weight', is_active: true, sort_order: 2 },
+  { id: 'item-potato',    category_id: 'cat-produce',    name: 'Potatoes',     unit_type_id: 'ut-weight', is_active: true, sort_order: 3 },
+  { id: 'item-garlic',    category_id: 'cat-produce',    name: 'Garlic',       unit_type_id: 'ut-count',  is_active: true, sort_order: 4 },
+  { id: 'item-lemon',     category_id: 'cat-produce',    name: 'Lemons',       unit_type_id: 'ut-count',  is_active: true, sort_order: 5 },
+  { id: 'item-banana',    category_id: 'cat-produce',    name: 'Bananas',      unit_type_id: 'ut-count',  is_active: true, sort_order: 6 },
+  { id: 'item-apple',     category_id: 'cat-produce',    name: 'Apples',       unit_type_id: 'ut-weight', is_active: true, sort_order: 7 },
+  { id: 'item-carrot',    category_id: 'cat-produce',    name: 'Carrots',      unit_type_id: 'ut-weight', is_active: true, sort_order: 8 },
+  { id: 'item-cucumber',  category_id: 'cat-produce',    name: 'Cucumbers',    unit_type_id: 'ut-count',  is_active: true, sort_order: 9 },
+  { id: 'item-pepper',    category_id: 'cat-produce',    name: 'Bell Peppers', unit_type_id: 'ut-count',  is_active: true, sort_order: 10 },
   // Dairy & Eggs
-  { id: 'item-milk',      category_id: 'cat-dairy',      name: 'Milk',         default_unit_type: 'volume', is_active: true, sort_order: 1 },
-  { id: 'item-eggs',      category_id: 'cat-dairy',      name: 'Eggs',         default_unit_type: 'count',  is_active: true, sort_order: 2 },
-  { id: 'item-cheese',    category_id: 'cat-dairy',      name: 'Cheese',       default_unit_type: 'weight', is_active: true, sort_order: 3 },
-  { id: 'item-yogurt',    category_id: 'cat-dairy',      name: 'Yogurt',       default_unit_type: 'volume', is_active: true, sort_order: 4 },
-  { id: 'item-butter',    category_id: 'cat-dairy',      name: 'Butter',       default_unit_type: 'weight', is_active: true, sort_order: 5 },
+  { id: 'item-milk',      category_id: 'cat-dairy',      name: 'Milk',         unit_type_id: 'ut-volume', is_active: true, sort_order: 1 },
+  { id: 'item-eggs',      category_id: 'cat-dairy',      name: 'Eggs',         unit_type_id: 'ut-count',  is_active: true, sort_order: 2 },
+  { id: 'item-cheese',    category_id: 'cat-dairy',      name: 'Cheese',       unit_type_id: 'ut-weight', is_active: true, sort_order: 3 },
+  { id: 'item-yogurt',    category_id: 'cat-dairy',      name: 'Yogurt',       unit_type_id: 'ut-volume', is_active: true, sort_order: 4 },
+  { id: 'item-butter',    category_id: 'cat-dairy',      name: 'Butter',       unit_type_id: 'ut-weight', is_active: true, sort_order: 5 },
   // Meat & Fish
-  { id: 'item-chicken',   category_id: 'cat-meat',       name: 'Chicken',      default_unit_type: 'weight', is_active: true, sort_order: 1 },
-  { id: 'item-beef',      category_id: 'cat-meat',       name: 'Beef',         default_unit_type: 'weight', is_active: true, sort_order: 2 },
-  { id: 'item-fish',      category_id: 'cat-meat',       name: 'Fish',         default_unit_type: 'weight', is_active: true, sort_order: 3 },
+  { id: 'item-chicken',   category_id: 'cat-meat',       name: 'Chicken',      unit_type_id: 'ut-weight', is_active: true, sort_order: 1 },
+  { id: 'item-beef',      category_id: 'cat-meat',       name: 'Beef',         unit_type_id: 'ut-weight', is_active: true, sort_order: 2 },
+  { id: 'item-fish',      category_id: 'cat-meat',       name: 'Fish',         unit_type_id: 'ut-weight', is_active: true, sort_order: 3 },
   // Bakery
-  { id: 'item-bread',     category_id: 'cat-bakery',     name: 'Bread',        default_unit_type: 'count',  is_active: true, sort_order: 1 },
+  { id: 'item-bread',     category_id: 'cat-bakery',     name: 'Bread',        unit_type_id: 'ut-count',  is_active: true, sort_order: 1 },
   // Beverages
-  { id: 'item-water',     category_id: 'cat-beverages',  name: 'Water',        default_unit_type: 'volume', is_active: true, sort_order: 1 },
-  { id: 'item-juice',     category_id: 'cat-beverages',  name: 'Juice',        default_unit_type: 'volume', is_active: true, sort_order: 2 },
-  { id: 'item-tea',       category_id: 'cat-beverages',  name: 'Tea',          default_unit_type: 'count',  is_active: true, sort_order: 3 },
-  { id: 'item-coffee',    category_id: 'cat-beverages',  name: 'Coffee',       default_unit_type: 'weight', is_active: true, sort_order: 4 },
+  { id: 'item-water',     category_id: 'cat-beverages',  name: 'Water',        unit_type_id: 'ut-volume', is_active: true, sort_order: 1 },
+  { id: 'item-juice',     category_id: 'cat-beverages',  name: 'Juice',        unit_type_id: 'ut-volume', is_active: true, sort_order: 2 },
+  { id: 'item-tea',       category_id: 'cat-beverages',  name: 'Tea',          unit_type_id: 'ut-count',  is_active: true, sort_order: 3 },
+  { id: 'item-coffee',    category_id: 'cat-beverages',  name: 'Coffee',       unit_type_id: 'ut-weight', is_active: true, sort_order: 4 },
   // Snacks
-  { id: 'item-chips',     category_id: 'cat-snacks',     name: 'Chips',        default_unit_type: 'count',  is_active: true, sort_order: 1 },
-  { id: 'item-biscuits',  category_id: 'cat-snacks',     name: 'Biscuits',     default_unit_type: 'count',  is_active: true, sort_order: 2 },
+  { id: 'item-chips',     category_id: 'cat-snacks',     name: 'Chips',        unit_type_id: 'ut-count',  is_active: true, sort_order: 1 },
+  { id: 'item-biscuits',  category_id: 'cat-snacks',     name: 'Biscuits',     unit_type_id: 'ut-count',  is_active: true, sort_order: 2 },
   // Spices & Sauces
-  { id: 'item-salt',      category_id: 'cat-spices',     name: 'Salt',         default_unit_type: 'weight', is_active: true, sort_order: 1 },
-  { id: 'item-oil',       category_id: 'cat-spices',     name: 'Cooking Oil',  default_unit_type: 'volume', is_active: true, sort_order: 2 },
-  { id: 'item-soy-sauce', category_id: 'cat-spices',     name: 'Soy Sauce',    default_unit_type: 'volume', is_active: true, sort_order: 3 },
+  { id: 'item-salt',      category_id: 'cat-spices',     name: 'Salt',         unit_type_id: 'ut-weight', is_active: true, sort_order: 1 },
+  { id: 'item-oil',       category_id: 'cat-spices',     name: 'Cooking Oil',  unit_type_id: 'ut-volume', is_active: true, sort_order: 2 },
+  { id: 'item-soy-sauce', category_id: 'cat-spices',     name: 'Soy Sauce',    unit_type_id: 'ut-volume', is_active: true, sort_order: 3 },
   // Grains & Pasta
-  { id: 'item-rice',      category_id: 'cat-grains',     name: 'Rice',         default_unit_type: 'weight', is_active: true, sort_order: 1 },
-  { id: 'item-pasta',     category_id: 'cat-grains',     name: 'Pasta',        default_unit_type: 'weight', is_active: true, sort_order: 2 },
-  { id: 'item-flour',     category_id: 'cat-grains',     name: 'Flour',        default_unit_type: 'weight', is_active: true, sort_order: 3 },
+  { id: 'item-rice',      category_id: 'cat-grains',     name: 'Rice',         unit_type_id: 'ut-weight', is_active: true, sort_order: 1 },
+  { id: 'item-pasta',     category_id: 'cat-grains',     name: 'Pasta',        unit_type_id: 'ut-weight', is_active: true, sort_order: 2 },
+  { id: 'item-flour',     category_id: 'cat-grains',     name: 'Flour',        unit_type_id: 'ut-weight', is_active: true, sort_order: 3 },
   // Household
-  { id: 'item-detergent', category_id: 'cat-household',  name: 'Detergent',    default_unit_type: 'count',  is_active: true, sort_order: 1 },
-  { id: 'item-tissue',    category_id: 'cat-household',  name: 'Tissue',       default_unit_type: 'count',  is_active: true, sort_order: 2 },
-  { id: 'item-soap',      category_id: 'cat-household',  name: 'Dish Soap',    default_unit_type: 'volume', is_active: true, sort_order: 3 },
+  { id: 'item-detergent', category_id: 'cat-household',  name: 'Detergent',    unit_type_id: 'ut-count',  is_active: true, sort_order: 1 },
+  { id: 'item-tissue',    category_id: 'cat-household',  name: 'Tissue',       unit_type_id: 'ut-count',  is_active: true, sort_order: 2 },
+  { id: 'item-soap',      category_id: 'cat-household',  name: 'Dish Soap',    unit_type_id: 'ut-volume', is_active: true, sort_order: 3 },
   // Personal Care
-  { id: 'item-shampoo',   category_id: 'cat-personal',   name: 'Shampoo',      default_unit_type: 'volume', is_active: true, sort_order: 1 },
-  { id: 'item-toothpaste',category_id: 'cat-personal',   name: 'Toothpaste',   default_unit_type: 'count',  is_active: true, sort_order: 2 },
+  { id: 'item-shampoo',   category_id: 'cat-personal',   name: 'Shampoo',      unit_type_id: 'ut-volume', is_active: true, sort_order: 1 },
+  { id: 'item-toothpaste',category_id: 'cat-personal',   name: 'Toothpaste',   unit_type_id: 'ut-count',  is_active: true, sort_order: 2 },
 ]
 
 interface PresetTemplate {
   label: string
   amount: number
-  unit: string
+  unit: string   // symbol used to look up the unit_id from the provided units array
   sort_order: number
 }
 
@@ -121,21 +121,42 @@ const countPresets: PresetTemplate[] = [
   { label: '12 pcs', amount: 12, unit: 'pc', sort_order: 5 },
 ]
 
-const presetsByType: Record<string, PresetTemplate[]> = {
+const presetsByTypeName: Record<string, PresetTemplate[]> = {
   weight: weightPresets,
   volume: volumePresets,
   count:  countPresets,
 }
 
-export function buildUnitPresetsForItem(itemId: string, unitType: string): UnitPreset[] {
-  const presets = presetsByType[unitType] ?? countPresets
-  return presets.map((preset, index) => ({
-    id: `preset-${itemId}-${index + 1}`,
-    item_id: itemId,
-    ...preset,
-  }))
+/**
+ * Build UnitPreset records for an item.
+ * @param itemId      The item's id
+ * @param unitTypeName  The unit type's name ('weight' | 'volume' | 'count' | 'length')
+ * @param units       Units belonging to this type — used to resolve symbol → unit_id
+ */
+export function buildUnitPresetsForItem(
+  itemId: string,
+  unitTypeName: string,
+  units: Unit[],
+): UnitPreset[] {
+  const templates = presetsByTypeName[unitTypeName] ?? countPresets
+  return templates
+    .map((template, index) => {
+      const unit = units.find(u => u.symbol === template.unit)
+      if (!unit) return null
+      return {
+        id: `preset-${itemId}-${index + 1}`,
+        item_id: itemId,
+        label: template.label,
+        amount: template.amount,
+        unit_id: unit.id,
+        sort_order: template.sort_order,
+      }
+    })
+    .filter((p): p is UnitPreset => p !== null)
 }
 
-export const seedUnitPresets: UnitPreset[] = seedItems.flatMap(item =>
-  buildUnitPresetsForItem(item.id, item.default_unit_type ?? 'count')
-)
+export const seedUnitPresets: UnitPreset[] = seedItems.flatMap(item => {
+  const unitType = seedUnitTypes.find(ut => ut.id === item.unit_type_id)
+  const units = seedUnits.filter(u => u.unit_type_id === item.unit_type_id)
+  return buildUnitPresetsForItem(item.id, unitType?.name ?? 'count', units)
+})

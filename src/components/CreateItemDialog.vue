@@ -50,7 +50,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
-  submit: [payload: { name: string; categoryId: string | null; unitType: string }]
+  submit: [payload: { name: string; categoryId: string | null; unitTypeId: string }]
 }>()
 
 const unitTypesStore = useUnitTypesStore()
@@ -66,10 +66,9 @@ const categoryOptions = computed(() => [
   ...props.categories.map(cat => ({ value: cat.id, label: `${cat.icon} ${cat.name}` })),
 ])
 
-// Sourced from the unit_types table; value is ut.name so it maps to
-// items.default_unit_type ('weight', 'volume', 'count', 'length')
+// Value is ut.id (UUID FK to unit_types)
 const unitTypeOptions = computed(() =>
-  unitTypesStore.sorted.map(ut => ({ value: ut.name, label: ut.label }))
+  unitTypesStore.sorted.map(ut => ({ value: ut.id, label: ut.label }))
 )
 
 watch(() => props.show, async (visible) => {
@@ -92,10 +91,10 @@ defineExpose({
 
 function handleSubmit() {
   if (!canSubmit.value || props.loading) return
-  emit('submit', { 
-    name: name.value.trim(), 
-    categoryId: categoryId.value, 
-    unitType: unitType.value 
+  emit('submit', {
+    name: name.value.trim(),
+    categoryId: categoryId.value,
+    unitTypeId: unitType.value
   })
 }
 </script>

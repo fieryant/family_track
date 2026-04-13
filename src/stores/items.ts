@@ -1,7 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { seedItems, seedUnitPresets, buildUnitPresetsForItem } from '../lib/seedData'
+import { seedItems, seedUnitPresets, seedUnits, seedUnitTypes, buildUnitPresetsForItem } from '../lib/seedData'
+import { useUnitsStore } from './units'
+import { useUnitTypesStore } from './unitTypes'
 import type { Item, UnitPreset } from '../types'
 
 export const useItemsStore = defineStore('items', () => {
@@ -57,12 +59,12 @@ export const useItemsStore = defineStore('items', () => {
   async function createItem({
     name,
     categoryId = null,
-    unitType = 'count',
+    unitTypeId = null,
     isActive = true,
   }: {
     name: string
     categoryId?: string | null
-    unitType?: string
+    unitTypeId?: string | null
     isActive?: boolean
   }): Promise<Item> {
     const trimmedName = name?.trim()
@@ -75,12 +77,10 @@ export const useItemsStore = defineStore('items', () => {
       id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       category_id: categoryId,
       name: trimmedName,
-      default_unit_type: unitType,
+      unit_type_id: unitTypeId,
       is_active: isActive,
       sort_order: nextSortOrder(categoryId),
     }
-
-    const presets = buildUnitPresetsForItem(newItem.id, unitType)
 
     if (isSupabaseConfigured) {
       const { data, error } = await supabase!
@@ -88,7 +88,7 @@ export const useItemsStore = defineStore('items', () => {
         .insert({
           category_id: newItem.category_id,
           name: newItem.name,
-          default_unit_type: newItem.default_unit_type,
+          unit_type_id: newItem.unit_type_id,
           is_active: newItem.is_active,
           sort_order: newItem.sort_order,
         })
@@ -97,16 +97,33 @@ export const useItemsStore = defineStore('items', () => {
 
       if (error) throw error
 
-      const { error: presetError } = await supabase!
-        .from('unit_presets')
-        .insert(presets.map(({ id: _id, ...preset }) => preset))
+      // Resolve unit type name + units for preset generation
+      const unitsStore = useUnitsStore()
+      const unitTypesStore = useUnitTypesStore()
+      if (!unitsStore.units.length) await unitsStore.fetch()
+      if (!unitTypesStore.unitTypes.length) await unitTypesStore.fetch()
 
-      if (presetError) console.error('Failed to create unit presets for item:', presetError)
+      const unitType = unitTypeId ? unitTypesStore.byId[unitTypeId] : null
+      const unitsForType = unitTypeId ? unitsStore.forType(unitTypeId) : []
+      const presets = buildUnitPresetsForItem(data.id, unitType?.name ?? 'count', unitsForType)
+
+      if (presets.length > 0) {
+        const { error: presetError } = await supabase!
+          .from('unit_presets')
+          .insert(presets.map(({ id: _id, ...preset }) => preset))
+
+        if (presetError) console.error('Failed to create unit presets for item:', presetError)
+      }
 
       items.value.push(data)
-      unitPresets.value.push(...presets)
+      unitPresets.value.push(...presets.map((p, i) => ({ ...p, id: `preset-${data.id}-${i + 1}` })))
       return data
     }
+
+    // Seed/local mode
+    const unitType = seedUnitTypes.find(ut => ut.id === unitTypeId)
+    const unitsForType = seedUnits.filter(u => u.unit_type_id === unitTypeId)
+    const presets = buildUnitPresetsForItem(newItem.id, unitType?.name ?? 'count', unitsForType)
 
     items.value.push(newItem)
     unitPresets.value.push(...presets)
@@ -140,7 +157,7 @@ export const useItemsStore = defineStore('items', () => {
 
   async function updateItem(
     id: string,
-    { name, categoryId, unitType, isActive }: { name?: string; categoryId?: string | null; unitType?: string; isActive?: boolean }
+    { name, categoryId, unitTypeId, isActive }: { name?: string; categoryId?: string | null; unitTypeId?: string | null; isActive?: boolean }
   ): Promise<Item> {
     const idx = items.value.findIndex(i => i.id === id)
     if (idx === -1) throw new Error('Item not found')
@@ -148,7 +165,7 @@ export const useItemsStore = defineStore('items', () => {
     const patch = {
       name: name?.trim() ?? items.value[idx].name,
       category_id: categoryId !== undefined ? categoryId : items.value[idx].category_id,
-      default_unit_type: unitType ?? items.value[idx].default_unit_type,
+      unit_type_id: unitTypeId !== undefined ? unitTypeId : items.value[idx].unit_type_id,
       is_active: isActive !== undefined ? isActive : items.value[idx].is_active,
     }
 

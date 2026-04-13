@@ -43,9 +43,9 @@
                 <div class="w-28">
                   <FormSelect
                     id="custom-unit-select"
-                    v-model="customUnit"
+                    v-model="customUnitId"
                     label=""
-                    :options="unitOptionsMapped"
+                    :options="unitOptions"
                   />
                 </div>
               </div>
@@ -81,7 +81,7 @@ import type { Item, UnitPreset } from '../types'
 
 const emit = defineEmits<{
   close: []
-  confirm: [payload: { amount: number; unit: string }]
+  confirm: [payload: { amount: number; unit_id: string }]
 }>()
 const itemsStore = useItemsStore()
 const unitsStore = useUnitsStore()
@@ -94,31 +94,28 @@ onMounted(() => {
 
 const selectedPreset = ref<UnitPreset | null>(null)
 const customAmount = ref<number | null>(null)
-const customUnit = ref('')
+const customUnitId = ref('')
 
 const presets = computed((): UnitPreset[] => {
   if (!props.item) return []
   return itemsStore.presetsForItem((props.item as Item).id)
 })
 
-const unitOptionsMapped = computed(() => {
+const unitOptions = computed(() => {
   if (!props.item) return []
   const item = props.item as Item
-  const unitType = item.unit_type_id
-    ? unitTypesStore.byId[item.unit_type_id]
-    : unitTypesStore.unitTypes.find(t => t.name === item.default_unit_type)
-  if (!unitType) return []
-  return unitsStore.forType(unitType.id).map(u => ({ value: u.symbol, label: u.symbol }))
+  if (!item.unit_type_id) return []
+  return unitsStore.forType(item.unit_type_id).map(u => ({ value: u.id, label: u.symbol }))
 })
 
 const canConfirm = computed(() =>
-  selectedPreset.value !== null || (customAmount.value !== null && customAmount.value > 0 && customUnit.value)
+  selectedPreset.value !== null || (customAmount.value !== null && customAmount.value > 0 && customUnitId.value)
 )
 
 watch(() => props.item, () => {
   selectedPreset.value = null
   customAmount.value = null
-  customUnit.value = unitOptionsMapped.value[0]?.value as string || ''
+  customUnitId.value = unitOptions.value[0]?.value ?? ''
 })
 
 function selectPreset(preset: UnitPreset) {
@@ -128,9 +125,9 @@ function selectPreset(preset: UnitPreset) {
 
 function confirm() {
   if (selectedPreset.value) {
-    emit('confirm', { amount: selectedPreset.value.amount, unit: selectedPreset.value.unit })
-  } else if (customAmount.value !== null && customAmount.value > 0 && customUnit.value) {
-    emit('confirm', { amount: customAmount.value, unit: customUnit.value })
+    emit('confirm', { amount: selectedPreset.value.amount, unit_id: selectedPreset.value.unit_id })
+  } else if (customAmount.value !== null && customAmount.value > 0 && customUnitId.value) {
+    emit('confirm', { amount: customAmount.value, unit_id: customUnitId.value })
   }
 }
 </script>

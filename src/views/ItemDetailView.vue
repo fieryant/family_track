@@ -15,7 +15,7 @@
         <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/5 text-5xl ring-1 ring-white/10">{{ categoryIcon }}</div>
         <h2 class="text-3xl font-extrabold tracking-tight text-white">{{ item.name }}</h2>
         <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
-          <span class="inline-flex items-center rounded-full bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-cyan-200">{{ item.default_unit_type }}</span>
+          <span class="inline-flex items-center rounded-full bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-cyan-200">{{ item.unit_type_id ? unitTypesStore.byId[item.unit_type_id]?.label : '—' }}</span>
           <span class="text-sm text-slate-400">{{ categoryName }}</span>
         </div>
       </div>
@@ -74,6 +74,7 @@
 import { computed } from 'vue'
 import { useItemsStore } from '../stores/items'
 import { useCategoriesStore } from '../stores/categories'
+import { useUnitTypesStore } from '../stores/unitTypes'
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -81,6 +82,7 @@ const props = defineProps({
 
 const itemsStore = useItemsStore()
 const categoriesStore = useCategoriesStore()
+const unitTypesStore = useUnitTypesStore()
 
 const item = computed(() => itemsStore.byId[props.id] || null)
 const presets = computed(() => itemsStore.presetsForItem(props.id))

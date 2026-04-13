@@ -25,10 +25,7 @@ export interface Item {
   id: string
   category_id: string | null
   name: string
-  /** Present in Supabase mode (UUID FK to unit_types) */
-  unit_type_id?: string
-  /** Present in seed/local mode (text name, e.g. 'weight') */
-  default_unit_type?: string
+  unit_type_id: string | null
   is_active: boolean
   sort_order: number
 }
@@ -38,7 +35,7 @@ export interface UnitPreset {
   item_id: string
   label: string
   amount: number
-  unit: string
+  unit_id: string  // UUID FK → units(id)
   sort_order: number
 }
 
@@ -55,7 +52,7 @@ export interface ShopSession {
 export interface SessionItem {
   name: string
   amount: number
-  unit: string
+  unit: string  // resolved symbol for display (joined from units)
 }
 
 export type ShopListStatus = 'pending' | 'bought' | 'partial' | 'removed'
@@ -65,17 +62,19 @@ export interface ShopListItem {
   session_id: string
   item_id: string
   requested_amount: number
-  requested_unit: string
+  requested_unit_id: string   // UUID FK → units(id)
   status: ShopListStatus
   bought_amount: number | null
-  bought_unit: string | null
+  bought_unit_id: string | null  // UUID FK → units(id)
   note: string | null
   added_at: string
   updated_at: string
-  // Denormalised fields joined from items
+  // Denormalised fields joined/resolved at fetch time
   _name: string
   _categoryId: string | null
-  _unitType: string
+  _unitTypeId: string | null
+  _requestedUnitSymbol: string
+  _boughtUnitSymbol: string | null
 }
 
 export interface CategoryGroup {

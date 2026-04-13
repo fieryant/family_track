@@ -6,7 +6,7 @@
           <div class="w-full max-w-lg max-h-[80dvh] overflow-y-auto rounded-t-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl shadow-black/40 ring-1 ring-white/5 sm:rounded-3xl">
             <div class="mb-6">
               <h3 class="text-xl font-bold text-white">Partial Buy</h3>
-              <p class="mt-1 text-sm text-slate-400">{{ item?._name }} — requested {{ item?.requested_amount }} {{ item?.requested_unit }}</p>
+              <p class="mt-1 text-sm text-slate-400">{{ item?._name }} — requested {{ item?.requested_amount }} {{ item?._requestedUnitSymbol }}</p>
             </div>
 
             <div class="mb-6">
@@ -21,13 +21,14 @@
                   step="any"
                   placeholder="Amount bought"
                 />
-                <input
-                  id="partial-unit-input"
-                  v-model="unit"
-                  class="w-28 rounded-2xl border border-white/10 bg-slate-800/80 px-4 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-cyan-400/60 focus:ring-2 focus:ring-cyan-400/20"
-                  type="text"
-                  :placeholder="item?.requested_unit || 'unit'"
-                />
+                <div class="w-28">
+                  <FormSelect
+                    id="partial-unit-select"
+                    v-model="unitId"
+                    label=""
+                    :options="unitOptions"
+                  />
+                </div>
               </div>
             </div>
 
@@ -43,28 +44,41 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useUnitsStore } from '../stores/units'
+import FormSelect from './FormSelect.vue'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
   item: { type: Object, default: null },
 })
 
-const emit = defineEmits(['close', 'confirm'])
+const emit = defineEmits<{
+  close: []
+  confirm: [payload: { amount: number; unit_id: string }]
+}>()
+
+const unitsStore = useUnitsStore()
 
 const amount = ref<number | null>(null)
-const unit = ref('')
+const unitId = ref('')
+
+const unitOptions = computed(() => {
+  const typeId = props.item?._unitTypeId
+  if (!typeId) return []
+  return unitsStore.forType(typeId).map(u => ({ value: u.id, label: u.symbol }))
+})
 
 watch(() => props.item, (item) => {
   amount.value = null
-  unit.value = item?.requested_unit || ''
+  unitId.value = item?.requested_unit_id || ''
 })
 
 function confirm() {
   if (amount.value !== null && amount.value > 0) {
     emit('confirm', {
       amount: amount.value,
-      unit: unit.value || props.item?.requested_unit || 'pc',
+      unit_id: unitId.value || props.item?.requested_unit_id || '',
     })
   }
 }

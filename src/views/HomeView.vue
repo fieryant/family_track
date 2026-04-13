@@ -132,9 +132,9 @@ function openPartialDialog(item: ShopListItemData) {
   showPartialDialog.value = true
 }
 
-async function handlePartialConfirm({ amount, unit }: { amount: number; unit: string }) {
+async function handlePartialConfirm({ amount, unit_id }: { amount: number; unit_id: string }) {
   if (partialItem.value) {
-    await shopListStore.updateStatus(partialItem.value.id, 'partial', amount, unit)
+    await shopListStore.updateStatus(partialItem.value.id, 'partial', amount, unit_id)
   }
   showPartialDialog.value = false
   partialItem.value = null

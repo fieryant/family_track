@@ -47,7 +47,7 @@
           <div class="flex-1 min-w-0">
             <p class="font-medium text-slate-100 truncate">{{ item.name }}</p>
             <p class="text-xs text-slate-500">
-              {{ categoryName(item.category_id) }} · {{ item.default_unit_type }}
+              {{ categoryName(item.category_id) }} · {{ item.unit_type_id ? unitTypesStore.byId[item.unit_type_id]?.label : '—' }}
               <span v-if="!item.is_active" class="ml-1 rounded bg-slate-700 px-1 py-0.5 text-[10px] text-slate-400">inactive</span>
             </p>
           </div>
@@ -67,7 +67,7 @@
       <div class="space-y-4">
         <FormInput v-model="form.name" label="Name" placeholder="e.g. Brown Rice" :autofocus="true" :maxlength="80" />
         <FormSelect v-model="form.categoryId" label="Category" :options="categoryOptions" />
-        <FormSelect v-model="form.unitType" label="Unit Type" :options="unitTypeOptions" />
+        <FormSelect v-model="form.unitTypeId" label="Unit Type" :options="unitTypeOptions" />
         <label class="flex items-center gap-3 cursor-pointer">
           <div
             class="relative h-6 w-11 rounded-full transition"
@@ -131,8 +131,8 @@ const editing = ref<Item | null>(null)
 const deleteTarget = ref<Item | null>(null)
 const searchQuery = ref('')
 
-const defaultUnitType = () => unitTypesStore.sorted[0]?.name ?? 'count'
-const form = reactive({ name: '', categoryId: '', unitType: 'count', isActive: true })
+const defaultUnitTypeId = () => unitTypesStore.sorted[0]?.id ?? ''
+const form = reactive({ name: '', categoryId: '', unitTypeId: '', isActive: true })
 
 const categoryOptions = computed(() => [
   { value: '', label: '— No category —' },
@@ -140,7 +140,7 @@ const categoryOptions = computed(() => [
 ])
 
 const unitTypeOptions = computed(() =>
-  unitTypesStore.sorted.map(ut => ({ value: ut.name, label: ut.label }))
+  unitTypesStore.sorted.map(ut => ({ value: ut.id, label: ut.label }))
 )
 
 const filteredItems = computed(() => {
@@ -159,7 +159,7 @@ function openAdd() {
   editing.value = null
   form.name = ''
   form.categoryId = ''
-  form.unitType = defaultUnitType()
+  form.unitTypeId = defaultUnitTypeId()
   form.isActive = true
   showForm.value = true
 }
@@ -168,7 +168,7 @@ function openEdit(item: Item) {
   editing.value = item
   form.name = item.name
   form.categoryId = item.category_id ?? ''
-  form.unitType = item.default_unit_type ?? defaultUnitType()
+  form.unitTypeId = item.unit_type_id ?? defaultUnitTypeId()
   form.isActive = item.is_active
   showForm.value = true
 }
@@ -185,14 +185,14 @@ async function save() {
       await itemsStore.updateItem(editing.value.id, {
         name: form.name,
         categoryId: form.categoryId || null,
-        unitType: form.unitType,
+        unitTypeId: form.unitTypeId || null,
         isActive: form.isActive,
       })
     } else {
       await itemsStore.createItem({
         name: form.name,
         categoryId: form.categoryId || null,
-        unitType: form.unitType,
+        unitTypeId: form.unitTypeId || null,
         isActive: form.isActive,
       })
     }

@@ -34,9 +34,9 @@
         {{ item._name }}
       </span>
       <span class="text-xs text-slate-400">
-        {{ item.requested_amount }} {{ item.requested_unit }}
+        {{ item.requested_amount }} {{ item._requestedUnitSymbol }}
         <template v-if="item.status === 'partial' && item.bought_amount">
-          → {{ item.bought_amount }} {{ item.bought_unit }}
+          → {{ item.bought_amount }} {{ item._boughtUnitSymbol }}
         </template>
       </span>
     </div>
