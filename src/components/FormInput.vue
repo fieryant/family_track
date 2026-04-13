@@ -1,6 +1,6 @@
 <template>
-  <label class="block space-y-2">
-    <span class="text-sm font-medium text-slate-200">{{ label }}</span>
+  <label class="block">
+    <div class="text-sm font-medium text-slate-200 mb-2">{{ label }}</div>
     <input
       :value="modelValue"
       :type="type"

@@ -21,7 +21,7 @@
       id="bottom-nav"
       class="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur-xl"
     >
-      <div class="mx-auto grid w-full max-w-2xl grid-cols-3 gap-4 px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+      <div class="mx-auto grid w-full max-w-2xl grid-cols-4 gap-2 px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
         <router-link v-slot="{ href, navigate, isActive }" to="/" custom>
           <a
             id="nav-home"
@@ -64,6 +64,21 @@
           >
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <span>History</span>
+          </a>
+        </router-link>
+
+        <router-link v-slot="{ href, navigate, isActive }" to="/settings" custom>
+          <a
+            id="nav-settings"
+            :href="href"
+            :class="[
+              'flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2 text-xs font-medium transition',
+              isActive ? 'bg-amber-400/10 text-amber-300 shadow-[0_0_0_1px_rgba(251,191,36,0.18)]' : 'text-slate-400 hover:bg-white/5 hover:text-slate-100',
+            ]"
+            @click="navigate"
+          >
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Settings</span>
           </a>
         </router-link>
       </div>

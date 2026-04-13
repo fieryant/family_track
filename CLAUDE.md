@@ -57,7 +57,7 @@ Four lazy-loaded routes: `/` (Home), `/add` (AddItem), `/item/:id` (ItemDetail),
 
 ### Component Conventions
 
-All components use `<script setup>` (Composition API). No Options API anywhere.
+All components use `<script setup>` (Composition API). No Options API anywhere. script section should always be at the top
 
 ```vue
 <script setup>

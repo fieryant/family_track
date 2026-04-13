@@ -15,16 +15,9 @@
         autofocus
       />
 
-      <FormSelect v-model="categoryId" label="Category">
-        <option :value="null">Uncategorized</option>
-        <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.icon }} {{ cat.name }}</option>
-      </FormSelect>
+      <FormSelect v-model="categoryId" label="Category" :options="categoryOptions" />
 
-      <FormSelect v-model="unitType" label="Unit type">
-        <option value="count">Count</option>
-        <option value="weight">Weight</option>
-        <option value="volume">Volume</option>
-      </FormSelect>
+      <FormSelect v-model="unitType" label="Unit type" :options="unitTypeOptions" />
 
       <p v-if="error" class="rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-200">{{ error }}</p>
 
@@ -44,6 +37,7 @@ import { ref, computed, watch } from 'vue'
 import Modal from './Modal.vue'
 import FormInput from './FormInput.vue'
 import FormSelect from './FormSelect.vue'
+import { useUnitTypesStore } from '../stores/unitTypes'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -55,15 +49,32 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'submit'])
 
+const unitTypesStore = useUnitTypesStore()
+
 const name = ref('')
 const categoryId = ref(null)
 const unitType = ref('count')
 
 const canSubmit = computed(() => name.value.trim().length > 0)
 
-watch(() => props.show, (newVal) => {
-  if (newVal && props.prefillName) {
-    name.value = props.prefillName
+const categoryOptions = computed(() => [
+  { value: '', label: 'Uncategorized' },
+  ...props.categories.map(cat => ({ value: cat.id, label: `${cat.icon} ${cat.name}` })),
+])
+
+// Sourced from the unit_types table; value is ut.name so it maps to
+// items.default_unit_type ('weight', 'volume', 'count', 'length')
+const unitTypeOptions = computed(() =>
+  unitTypesStore.sorted.map(ut => ({ value: ut.name, label: ut.label }))
+)
+
+watch(() => props.show, async (visible) => {
+  if (!visible) return
+  if (props.prefillName) name.value = props.prefillName
+  if (unitTypesStore.unitTypes.length === 0) await unitTypesStore.fetch()
+  // Default to first available type once loaded
+  if (!unitTypeOptions.value.find(o => o.value === unitType.value)) {
+    unitType.value = unitTypeOptions.value[0]?.value ?? 'count'
   }
 })
 
@@ -71,7 +82,7 @@ defineExpose({
   reset() {
     name.value = ''
     categoryId.value = null
-    unitType.value = 'count'
+    unitType.value = unitTypeOptions.value[0]?.value ?? 'count'
   },
 })
 

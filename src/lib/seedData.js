@@ -1,4 +1,28 @@
 // Seed data — used as fallback when Supabase is not configured
+
+export const seedUnitTypes = [
+  { id: 'ut-weight', name: 'weight', label: 'Weight', sort_order: 1 },
+  { id: 'ut-volume', name: 'volume', label: 'Volume', sort_order: 2 },
+  { id: 'ut-count',  name: 'count',  label: 'Count',  sort_order: 3 },
+  { id: 'ut-length', name: 'length', label: 'Length', sort_order: 4 },
+]
+
+export const seedUnits = [
+  // Weight
+  { id: 'u-g',  unit_type_id: 'ut-weight', symbol: 'g',  label: 'Gram',       base_factor: 1,    sort_order: 1 },
+  { id: 'u-kg', unit_type_id: 'ut-weight', symbol: 'kg', label: 'Kilogram',   base_factor: 1000, sort_order: 2 },
+  { id: 'u-pl', unit_type_id: 'ut-weight', symbol: 'pl', label: 'Palla',      base_factor: 5000, sort_order: 3 },
+  // Volume
+  { id: 'u-ml', unit_type_id: 'ut-volume', symbol: 'ml', label: 'Milliliter', base_factor: 1,    sort_order: 1 },
+  { id: 'u-l',  unit_type_id: 'ut-volume', symbol: 'L',  label: 'Liter',      base_factor: 1000, sort_order: 2 },
+  // Count
+  { id: 'u-pc', unit_type_id: 'ut-count',  symbol: 'pc', label: 'Piece',      base_factor: 1,    sort_order: 1 },
+  { id: 'u-hl', unit_type_id: 'ut-count',  symbol: 'hl', label: 'Hali', base_factor: 4,  sort_order: 2 },
+  { id: 'u-dz', unit_type_id: 'ut-count',  symbol: 'dz', label: 'Dozen',    base_factor: 12,   sort_order: 3 },
+  // Length
+  { id: 'u-cm', unit_type_id: 'ut-length', symbol: 'cm', label: 'Centimeter', base_factor: 1,    sort_order: 1 },
+  { id: 'u-m',  unit_type_id: 'ut-length', symbol: 'm',  label: 'Meter',      base_factor: 100,  sort_order: 2 },
+]
 export const seedCategories = [
   { id: 'cat-produce',  name: 'Produce',       icon: '🥬', sort_order: 1 },
   { id: 'cat-dairy',    name: 'Dairy & Eggs',   icon: '🥛', sort_order: 2 },

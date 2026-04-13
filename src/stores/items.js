@@ -137,5 +137,41 @@ export const useItemsStore = defineStore('items', () => {
     }
   }
 
-  return { items, unitPresets, loading, byCategory, byId, presetsForItem, search, fetch, createItem }
+  async function updateItem(id, { name, categoryId, unitType, isActive }) {
+    const idx = items.value.findIndex(i => i.id === id)
+    if (idx === -1) throw new Error('Item not found')
+
+    const patch = {
+      name: name?.trim() ?? items.value[idx].name,
+      category_id: categoryId !== undefined ? categoryId : items.value[idx].category_id,
+      default_unit_type: unitType ?? items.value[idx].default_unit_type,
+      is_active: isActive !== undefined ? isActive : items.value[idx].is_active,
+    }
+
+    if (isSupabaseConfigured) {
+      const { data, error } = await supabase
+        .from('items')
+        .update(patch)
+        .eq('id', id)
+        .select('*')
+        .single()
+      if (error) throw error
+      items.value[idx] = data
+      return data
+    }
+
+    items.value[idx] = { ...items.value[idx], ...patch }
+    return items.value[idx]
+  }
+
+  async function removeItem(id) {
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.from('items').delete().eq('id', id)
+      if (error) throw error
+    }
+    items.value = items.value.filter(i => i.id !== id)
+    unitPresets.value = unitPresets.value.filter(p => p.item_id !== id)
+  }
+
+  return { items, unitPresets, loading, byCategory, byId, presetsForItem, search, fetch, createItem, updateItem, removeItem }
 })

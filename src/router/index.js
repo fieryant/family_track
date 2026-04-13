@@ -22,6 +22,31 @@ const routes = [
     name: 'history',
     component: () => import('../views/HistoryView.vue'),
   },
+  {
+    path: '/settings',
+    name: 'settings',
+    component: () => import('../views/SettingsView.vue'),
+  },
+  {
+    path: '/settings/unit-types',
+    name: 'settings-unit-types',
+    component: () => import('../views/settings/UnitTypesView.vue'),
+  },
+  {
+    path: '/settings/units',
+    name: 'settings-units',
+    component: () => import('../views/settings/UnitsView.vue'),
+  },
+  {
+    path: '/settings/categories',
+    name: 'settings-categories',
+    component: () => import('../views/settings/CategoriesView.vue'),
+  },
+  {
+    path: '/settings/items',
+    name: 'settings-items',
+    component: () => import('../views/settings/ItemsView.vue'),
+  },
 ]
 
 const router = createRouter({
