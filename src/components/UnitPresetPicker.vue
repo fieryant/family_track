@@ -98,8 +98,11 @@ const presets = computed(() => {
 
 const unitOptionsMapped = computed(() => {
   if (!props.item) return []
-  const typeName = props.item.default_unit_type
-  const unitType = unitTypesStore.unitTypes.find(t => t.name === typeName)
+  // Supabase mode: unit_type_id is a UUID → look up by id
+  // Seed mode: default_unit_type is a name string → look up by name
+  const unitType = props.item.unit_type_id
+    ? unitTypesStore.byId[props.item.unit_type_id]
+    : unitTypesStore.unitTypes.find(t => t.name === props.item.default_unit_type)
   if (!unitType) return []
   return unitsStore.forType(unitType.id).map(u => ({ value: u.symbol, label: u.symbol }))
 })
