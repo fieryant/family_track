@@ -194,5 +194,42 @@ export const useItemsStore = defineStore('items', () => {
     unitPresets.value = unitPresets.value.filter(p => p.item_id !== id)
   }
 
-  return { items, unitPresets, loading, byCategory, byId, presetsForItem, search, fetch, createItem, updateItem, removeItem }
+  async function saveCustomPreset(itemId: string, amount: number, unitId: string): Promise<void> {
+    // Skip if an identical preset already exists for this item
+    const duplicate = unitPresets.value.find(
+      p => p.item_id === itemId && p.unit_id === unitId && p.amount === amount
+    )
+    if (duplicate) return
+
+    const unitsStore = useUnitsStore()
+    const unit = unitsStore.byId[unitId]
+    const label = unit ? `${amount} ${unit.symbol}` : String(amount)
+    const sort_order = presetsForItem(itemId).reduce((max, p) => Math.max(max, p.sort_order), 0) + 1
+
+    const newPreset: UnitPreset = {
+      id: `preset-custom-${Date.now()}`,
+      item_id: itemId,
+      label,
+      amount,
+      unit_id: unitId,
+      sort_order,
+    }
+
+    if (isSupabaseConfigured) {
+      const { data, error } = await supabase!
+        .from('unit_presets')
+        .insert({ item_id: itemId, label, amount, unit_id: unitId, sort_order })
+        .select('*')
+        .single()
+      if (error) {
+        console.error('Failed to save custom preset:', error)
+        return
+      }
+      unitPresets.value.push(data)
+    } else {
+      unitPresets.value.push(newPreset)
+    }
+  }
+
+  return { items, unitPresets, loading, byCategory, byId, presetsForItem, search, fetch, createItem, updateItem, removeItem, saveCustomPreset }
 })

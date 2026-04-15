@@ -16,10 +16,15 @@ export const useSessionStore = defineStore('session', () => {
     loading.value = true
     try {
       if (isSupabaseConfigured) {
+        const { useListsStore } = await import('./lists')
+        const listsStore = useListsStore()
+        if (!listsStore.currentListId) return
+
         const { data, error } = await supabase!
           .from('shop_sessions')
           .select('*')
           .eq('is_active', true)
+          .eq('list_id', listsStore.currentListId)
           .single()
         if (error && error.code !== 'PGRST116') throw error
         if (data) {
@@ -52,9 +57,11 @@ export const useSessionStore = defineStore('session', () => {
 
   async function createSession() {
     if (isSupabaseConfigured) {
+      const { useListsStore } = await import('./lists')
+      const listsStore = useListsStore()
       const { data, error } = await supabase!
         .from('shop_sessions')
-        .insert({ is_active: true })
+        .insert({ is_active: true, list_id: listsStore.currentListId })
         .select()
         .single()
       if (error) throw error
@@ -139,10 +146,15 @@ export const useSessionStore = defineStore('session', () => {
 
   async function fetchPastSessions() {
     if (isSupabaseConfigured) {
+      const { useListsStore } = await import('./lists')
+      const listsStore = useListsStore()
+      if (!listsStore.currentListId) return
+
       const { data, error } = await supabase!
         .from('shop_sessions')
         .select('*')
         .eq('is_active', false)
+        .eq('list_id', listsStore.currentListId)
         .order('completed_at', { ascending: false })
         .limit(20)
       if (error) throw error

@@ -1,13 +1,32 @@
+<script setup lang="ts">
+import { useShopListStore } from '../stores/shopList'
+import { useListsStore } from '../stores/lists'
+const shopListStore = useShopListStore()
+const listsStore = useListsStore()
+</script>
+
 <template>
   <header
     id="app-header"
     class="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl"
   >
     <div class="mx-auto flex max-w-2xl items-center justify-between px-4 py-4 pt-[calc(1rem+env(safe-area-inset-top))]">
-      <h1 class="flex items-center gap-2 text-lg font-bold tracking-tight text-white">
+      <!-- List name / switcher -->
+      <router-link
+        to="/lists"
+        class="group flex items-center gap-2 rounded-xl px-1 py-1 transition hover:bg-white/5"
+      >
         <span class="text-2xl">🛒</span>
-        Family Market
-      </h1>
+        <div class="min-w-0">
+          <p class="truncate text-sm font-bold leading-tight text-white max-w-35">
+            {{ listsStore.currentList?.name ?? 'Family Market' }}
+          </p>
+          <p class="text-[10px] leading-none text-slate-500 group-hover:text-slate-400">
+            Switch list
+          </p>
+        </div>
+        <svg class="h-3.5 w-3.5 shrink-0 text-slate-500 group-hover:text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </router-link>
 
       <button
         v-if="shopListStore.listItems.length > 0"
@@ -46,8 +65,3 @@
     </div>
   </header>
 </template>
-
-<script setup lang="ts">
-import { useShopListStore } from '../stores/shopList'
-const shopListStore = useShopListStore()
-</script>

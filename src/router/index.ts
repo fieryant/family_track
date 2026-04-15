@@ -9,6 +9,11 @@ const routes = [
     component: () => import('../views/LoginView.vue'),
   },
   {
+    path: '/lists',
+    name: 'lists',
+    component: () => import('../views/ListsView.vue'),
+  },
+  {
     path: '/',
     name: 'home',
     component: () => import('../views/HomeView.vue'),
@@ -73,6 +78,18 @@ router.beforeEach(async (to) => {
 
   if (authStore.isAuthenticated && to.name === 'login') {
     return { name: 'home' }
+  }
+
+  // Ensure the user has a list selected before accessing list-dependent routes
+  if (authStore.isAuthenticated && to.name !== 'lists') {
+    const { useListsStore } = await import('../stores/lists')
+    const listsStore = useListsStore()
+    if (listsStore.lists.length === 0) {
+      await listsStore.fetch()
+    }
+    if (!listsStore.currentListId) {
+      return { name: 'lists' }
+    }
   }
 })
 

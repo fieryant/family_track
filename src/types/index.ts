@@ -81,3 +81,23 @@ export interface CategoryGroup {
   category: Category
   items: ShopListItem[]
 }
+
+export interface ShoppingList {
+  id: string
+  name: string
+  created_by: string
+  invite_code: string
+  created_at: string
+  updated_at: string
+  /** Populated from list_members join at fetch time */
+  _role?: 'owner' | 'editor'
+  _memberCount?: number
+}
+
+export interface ListMember {
+  id: string
+  list_id: string
+  user_id: string
+  role: 'owner' | 'editor'
+  joined_at: string
+}

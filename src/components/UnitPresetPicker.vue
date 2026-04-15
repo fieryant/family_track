@@ -127,6 +127,8 @@ function confirm() {
   if (selectedPreset.value) {
     emit('confirm', { amount: selectedPreset.value.amount, unit_id: selectedPreset.value.unit_id })
   } else if (customAmount.value !== null && customAmount.value > 0 && customUnitId.value) {
+    const item = props.item as Item
+    itemsStore.saveCustomPreset(item.id, customAmount.value, customUnitId.value)
     emit('confirm', { amount: customAmount.value, unit_id: customUnitId.value })
   }
 }
