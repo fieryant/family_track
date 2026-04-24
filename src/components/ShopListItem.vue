@@ -34,9 +34,9 @@
         {{ item._name }}
       </span>
       <span class="text-xs text-slate-400">
-        {{ item.requested_amount }} {{ item._requestedUnitSymbol }}
+        {{ item.requested_amount }} {{ item._requestedUnitLabel }}
         <template v-if="item.status === 'partial' && item.bought_amount">
-          → {{ item.bought_amount }} {{ item._boughtUnitSymbol }}
+          → {{ item.bought_amount }} {{ item._boughtUnitLabel }}
         </template>
       </span>
     </div>
@@ -67,14 +67,14 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps({
-  item: { type: Object, required: true },
-  shoppingMode: { type: Boolean, default: false },
-})
+const props = defineProps<{
+  item: ShopListItem
+  shoppingMode: boolean
+}>()
 
 const emit = defineEmits(['toggle', 'partial', 'remove'])
 
-import type { ShopListStatus } from '../types'
+import type { ShopListItem, ShopListStatus } from '../types'
 
 function statusDotClasses(status: ShopListStatus) {
   const base = 'mt-1 block h-2 w-2 rounded-full'

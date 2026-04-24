@@ -66,7 +66,7 @@ const unitId = ref('')
 const unitOptions = computed(() => {
   const typeId = props.item?._unitTypeId
   if (!typeId) return []
-  return unitsStore.forType(typeId).map(u => ({ value: u.id, label: u.symbol }))
+  return unitsStore.forType(typeId).map(u => ({ value: u.id, label: u.label }))
 })
 
 watch(() => props.item, (item) => {

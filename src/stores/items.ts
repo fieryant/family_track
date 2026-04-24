@@ -203,7 +203,7 @@ export const useItemsStore = defineStore('items', () => {
 
     const unitsStore = useUnitsStore()
     const unit = unitsStore.byId[unitId]
-    const label = unit ? `${amount} ${unit.symbol}` : String(amount)
+    const label = unit ? `${amount} ${unit.label}` : String(amount)
     const sort_order = presetsForItem(itemId).reduce((max, p) => Math.max(max, p.sort_order), 0) + 1
 
     const newPreset: UnitPreset = {
@@ -231,5 +231,16 @@ export const useItemsStore = defineStore('items', () => {
     }
   }
 
-  return { items, unitPresets, loading, byCategory, byId, presetsForItem, search, fetch, createItem, updateItem, removeItem, saveCustomPreset }
+  async function removePreset(presetId: string): Promise<void> {
+    if (isSupabaseConfigured) {
+      const { error } = await supabase!.from('unit_presets').delete().eq('id', presetId)
+      if (error) {
+        console.error('Failed to remove preset:', error)
+        return
+      }
+    }
+    unitPresets.value = unitPresets.value.filter(p => p.id !== presetId)
+  }
+
+  return { items, unitPresets, loading, byCategory, byId, presetsForItem, search, fetch, createItem, updateItem, removeItem, saveCustomPreset, removePreset }
 })

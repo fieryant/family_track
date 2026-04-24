@@ -52,7 +52,7 @@ export interface ShopSession {
 export interface SessionItem {
   name: string
   amount: number
-  unit: string  // resolved symbol for display (joined from units)
+  unit: string  // resolved label for display (joined from units)
 }
 
 export type ShopListStatus = 'pending' | 'bought' | 'partial' | 'removed'
@@ -73,8 +73,8 @@ export interface ShopListItem {
   _name: string
   _categoryId: string | null
   _unitTypeId: string | null
-  _requestedUnitSymbol: string
-  _boughtUnitSymbol: string | null
+  _requestedUnitLabel: string
+  _boughtUnitLabel: string | null
 }
 
 export interface CategoryGroup {

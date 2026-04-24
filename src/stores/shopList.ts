@@ -40,11 +40,11 @@ export const useShopListStore = defineStore('shopList', () => {
     return { total, bought, partial, pending, removed }
   })
 
-  // Shape of a raw DB row joined with item + unit symbols
+  // Shape of a raw DB row joined with item + unit labels
   type RawRow = ShopListItem & {
     item: { name: string; category_id: string | null; unit_type_id: string | null } | null
-    requested_unit: { symbol: string } | null
-    bought_unit_rel: { symbol: string } | null
+    requested_unit: { label: string } | null
+    bought_unit_rel: { label: string } | null
   }
 
   function mapRow(d: RawRow): ShopListItem {
@@ -53,8 +53,8 @@ export const useShopListStore = defineStore('shopList', () => {
       _name: d.item?.name ?? 'Unknown',
       _categoryId: d.item?.category_id ?? null,
       _unitTypeId: d.item?.unit_type_id ?? null,
-      _requestedUnitSymbol: d.requested_unit?.symbol ?? '',
-      _boughtUnitSymbol: d.bought_unit_rel?.symbol ?? null,
+      _requestedUnitLabel: d.requested_unit?.label ?? '',
+      _boughtUnitLabel: d.bought_unit_rel?.label ?? null,
     }
   }
 
@@ -70,8 +70,8 @@ export const useShopListStore = defineStore('shopList', () => {
           .select(`
             *,
             item:items(name, category_id, unit_type_id),
-            requested_unit:units!requested_unit_id(symbol),
-            bought_unit_rel:units!bought_unit_id(symbol)
+            requested_unit:units!requested_unit_id(label),
+            bought_unit_rel:units!bought_unit_id(label)
           `)
           .eq('session_id', sessionStore.activeSession.id)
           .order('added_at')
@@ -122,8 +122,8 @@ export const useShopListStore = defineStore('shopList', () => {
       _name: itemName,
       _categoryId: categoryId,
       _unitTypeId: unitTypeId,
-      _requestedUnitSymbol: unitId,  // placeholder; caller should resolve symbol if needed
-      _boughtUnitSymbol: null,
+      _requestedUnitLabel: unitId,  // placeholder; caller should resolve label if needed
+      _boughtUnitLabel: null,
     }
 
     if (isSupabaseConfigured) {
@@ -138,8 +138,8 @@ export const useShopListStore = defineStore('shopList', () => {
         .select(`
           *,
           item:items(name, category_id, unit_type_id),
-          requested_unit:units!requested_unit_id(symbol),
-          bought_unit_rel:units!bought_unit_id(symbol)
+          requested_unit:units!requested_unit_id(label),
+          bought_unit_rel:units!bought_unit_id(label)
         `)
         .single()
 
@@ -176,6 +176,25 @@ export const useShopListStore = defineStore('shopList', () => {
       if (boughtUnitId !== null) update.bought_unit_id = boughtUnitId
 
       await supabase!.from('shop_list_items').update(update).eq('id', listItemId)
+    }
+  }
+
+  async function updateRequested(listItemId: string, amount: number, unitId: string) {
+    const idx = listItems.value.findIndex(i => i.id === listItemId)
+    if (idx === -1) return
+
+    listItems.value[idx] = {
+      ...listItems.value[idx],
+      requested_amount: amount,
+      requested_unit_id: unitId,
+      updated_at: new Date().toISOString(),
+    }
+
+    if (isSupabaseConfigured) {
+      await supabase!
+        .from('shop_list_items')
+        .update({ requested_amount: amount, requested_unit_id: unitId })
+        .eq('id', listItemId)
     }
   }
 
@@ -253,6 +272,7 @@ export const useShopListStore = defineStore('shopList', () => {
     summary,
     fetch,
     addItem,
+    updateRequested,
     updateStatus,
     removeItem,
     toggleBought,

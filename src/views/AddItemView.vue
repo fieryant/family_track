@@ -11,15 +11,20 @@ import EmptyState from '../components/EmptyState.vue'
 import CreateItemDialog from '../components/CreateItemDialog.vue'
 import Toast from '../components/Toast.vue'
 import type { Item } from '../types'
+import { useUnitTypesStore } from '../stores/unitTypes'
 
 const itemsStore = useItemsStore()
 const categoriesStore = useCategoriesStore()
 const shopListStore = useShopListStore()
+const unitTypeStore = useUnitTypesStore()
 
 const searchQuery = ref('')
 const selectedCategory = ref<string | null>(null)
 const showPresetPicker = ref(false)
 const selectedItem = ref<Item | null>(null)
+const editingListItemId = ref<string | null>(null)
+const editInitialAmount = ref<number | null>(null)
+const editInitialUnitId = ref<string>('')
 const toastMessage = ref('')
 const showCreateDialog = ref(false)
 const creatingItem = ref(false)
@@ -34,7 +39,7 @@ function isInList(itemId: string) {
 function inListAmountLabel(itemId: string) {
   const entry = shopListStore.listItems.find(i => i.item_id === itemId)
   if (!entry) return ''
-  return `${entry.requested_amount} ${entry._requestedUnitSymbol}`
+  return `${entry.requested_amount} ${entry._requestedUnitLabel}`
 }
 
 // Frequently bought items (stub: just the first 6 items for now)
@@ -75,7 +80,16 @@ const filteredItemsByCategory = computed(() => {
 })
 
 function onItemClick(item: Item) {
-  if (isInList(item.id)) return // already in list
+  const existing = shopListStore.listItems.find(i => i.item_id === item.id)
+  if (existing) {
+    editingListItemId.value = existing.id
+    editInitialAmount.value = existing.requested_amount
+    editInitialUnitId.value = existing.requested_unit_id
+  } else {
+    editingListItemId.value = null
+    editInitialAmount.value = null
+    editInitialUnitId.value = ''
+  }
   selectedItem.value = item
   showPresetPicker.value = true
 }
@@ -119,24 +133,33 @@ onMounted(() => {
   categoriesStore.fetch()
   itemsStore.fetch()
   shopListStore.fetch()
+  unitTypeStore.fetch()
 })
 
 async function handleAddToList({ amount, unit_id }: { amount: number; unit_id: string }) {
   if (!selectedItem.value) return
 
-  await shopListStore.addItem({
-    itemId: selectedItem.value.id,
-    itemName: selectedItem.value.name,
-    categoryId: selectedItem.value.category_id,
-    unitTypeId: selectedItem.value.unit_type_id ?? null,
-    amount,
-    unitId: unit_id,
-  })
+  const name = selectedItem.value.name
+
+  if (editingListItemId.value) {
+    await shopListStore.updateRequested(editingListItemId.value, amount, unit_id)
+    toastMessage.value = `${name} updated!`
+  } else {
+    await shopListStore.addItem({
+      itemId: selectedItem.value.id,
+      itemName: name,
+      categoryId: selectedItem.value.category_id,
+      unitTypeId: selectedItem.value.unit_type_id ?? null,
+      amount,
+      unitId: unit_id,
+    })
+    toastMessage.value = `${name} added!`
+  }
 
   showPresetPicker.value = false
-
-  // Show toast
-  toastMessage.value = `${selectedItem.value.name} added!`
+  editingListItemId.value = null
+  editInitialAmount.value = null
+  editInitialUnitId.value = ''
   setTimeout(() => { toastMessage.value = '' }, 2000)
   selectedItem.value = null
 }
@@ -206,8 +229,15 @@ async function handleAddToList({ amount, unit_id }: { amount: number; unit_id: s
       @submit="handleCreateItemSubmit" />
 
     <!-- Unit preset picker -->
-    <UnitPresetPicker :show="showPresetPicker" :item="selectedItem ?? undefined" @close="showPresetPicker = false"
-      @confirm="handleAddToList" />
+    <UnitPresetPicker
+      :show="showPresetPicker"
+      :item="selectedItem ?? undefined"
+      :initial-amount="editInitialAmount ?? undefined"
+      :initial-unit-id="editInitialUnitId"
+      :edit-mode="!!editingListItemId"
+      @close="showPresetPicker = false; editingListItemId = null"
+      @confirm="handleAddToList"
+    />
 
     <!-- Toast notification -->
     <Toast :show="!!toastMessage" :message="toastMessage" />
