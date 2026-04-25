@@ -1,11 +1,4 @@
--- =====================================================
--- Functions for Lists Feature
--- Run in Supabase SQL editor after lists_rls.sql
--- =====================================================
 
--- Invite a user to a list by email.
--- Runs as SECURITY DEFINER so it can query auth.users,
--- which is not accessible from the client directly.
 create or replace function add_list_member_by_email(p_list_id uuid, p_email text)
 returns jsonb
 language plpgsql
@@ -56,3 +49,4 @@ begin
   return jsonb_build_object('success', true);
 end;
 $$;
+;

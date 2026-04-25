@@ -101,3 +101,12 @@ export interface ListMember {
   role: 'owner' | 'editor'
   joined_at: string
 }
+
+export interface PantryItem {
+  id: string
+  list_id: string
+  item_id: string
+  amount: number
+  unit_id: string | null
+  updated_at: string
+}

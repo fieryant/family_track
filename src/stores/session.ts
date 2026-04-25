@@ -102,6 +102,11 @@ export const useSessionStore = defineStore('session', () => {
           unit_id: item.bought_unit_id ?? item.requested_unit_id,
         }))
         await supabase!.from('purchase_history').insert(historyRecords)
+
+        const { usePantryStore } = await import('./pantry')
+        const pantryStore = usePantryStore()
+        if (pantryStore.pantryItems.length === 0) await pantryStore.fetch()
+        await pantryStore.applyPurchases(historyRecords)
       }
 
       const completedItems: SessionItem[] = boughtItems.map(item => ({

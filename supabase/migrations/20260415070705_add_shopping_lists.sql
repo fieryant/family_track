@@ -1,7 +1,3 @@
--- =====================================================
--- Lists Feature Migration
--- Run in Supabase SQL editor after migration.sql
--- =====================================================
 
 -- Shopping lists (owned by a user, shareable via invite code)
 create table if not exists shopping_lists (
@@ -46,3 +42,4 @@ drop trigger if exists shopping_lists_updated_at on shopping_lists;
 create trigger shopping_lists_updated_at
   before update on shopping_lists
   for each row execute function update_shopping_lists_updated_at();
+;

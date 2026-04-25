@@ -3,6 +3,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useItemsStore } from '../stores/items'
 import { useCategoriesStore } from '../stores/categories'
 import { useShopListStore } from '../stores/shopList'
+import { usePantryStore } from '../stores/pantry'
+import { useUnitsStore } from '../stores/units'
 import SearchBar from '../components/SearchBar.vue'
 import UnitPresetPicker from '../components/UnitPresetPicker.vue'
 import ItemCard from '../components/ItemCard.vue'
@@ -17,6 +19,8 @@ const itemsStore = useItemsStore()
 const categoriesStore = useCategoriesStore()
 const shopListStore = useShopListStore()
 const unitTypeStore = useUnitTypesStore()
+const pantryStore = usePantryStore()
+const unitsStore = useUnitsStore()
 
 const searchQuery = ref('')
 const selectedCategory = ref<string | null>(null)
@@ -40,6 +44,13 @@ function inListAmountLabel(itemId: string) {
   const entry = shopListStore.listItems.find(i => i.item_id === itemId)
   if (!entry) return ''
   return `${entry.requested_amount} ${entry._requestedUnitLabel}`
+}
+
+function pantryAmountLabel(itemId: string) {
+  const entry = pantryStore.byItemId[itemId]
+  if (!entry || entry.amount <= 0) return ''
+  const unit = entry.unit_id ? unitsStore.byId[entry.unit_id] : null
+  return `${entry.amount}${unit ? ' ' + unit.label : ''}`
 }
 
 // Frequently bought items, ranked by purchase_history for the current list
@@ -143,6 +154,8 @@ onMounted(() => {
   itemsStore.fetch()
   itemsStore.fetchFrequent()
   itemsStore.fetchDue()
+  unitsStore.fetch()
+  pantryStore.fetch()
   shopListStore.fetch()
   unitTypeStore.fetch()
 })
@@ -212,7 +225,7 @@ async function handleAddToList({ amount, unit_id }: { amount: number; unit_id: s
       <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-fuchsia-300">Due to Buy</h3>
       <div class="flex flex-col gap-3">
         <ItemCard v-for="item in dueItems" :key="item.id" :item="item" :in-list="isInList(item.id)"
-          :in-list-amount="inListAmountLabel(item.id)" due @click="onItemClick(item)" />
+          :in-list-amount="inListAmountLabel(item.id)" :pantry-amount="pantryAmountLabel(item.id)" due @click="onItemClick(item)" />
       </div>
     </section>
 
@@ -220,7 +233,7 @@ async function handleAddToList({ amount, unit_id }: { amount: number; unit_id: s
       <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Frequently Bought</h3>
       <div class="flex flex-col gap-3">
         <ItemCard v-for="item in frequentItems" :key="item.id" :item="item" :in-list="isInList(item.id)"
-          :in-list-amount="inListAmountLabel(item.id)" @click="onItemClick(item)" />
+          :in-list-amount="inListAmountLabel(item.id)" :pantry-amount="pantryAmountLabel(item.id)" @click="onItemClick(item)" />
       </div>
     </section>
 
@@ -228,7 +241,7 @@ async function handleAddToList({ amount, unit_id }: { amount: number; unit_id: s
       <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{{ group.icon }} {{ group.name }}</h3>
       <div class="flex flex-col gap-3">
         <ItemCard v-for="item in group.items" :key="item.id" :item="item" :in-list="isInList(item.id)"
-          :in-list-amount="inListAmountLabel(item.id)" @click="onItemClick(item)" />
+          :in-list-amount="inListAmountLabel(item.id)" :pantry-amount="pantryAmountLabel(item.id)" @click="onItemClick(item)" />
       </div>
     </section>
 
