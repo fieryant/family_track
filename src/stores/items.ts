@@ -1,9 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { seedItems, seedUnitPresets, seedUnits, seedUnitTypes, buildUnitPresetsForItem } from '../lib/seedData'
+import { seedItems, seedUnitPresets } from '../lib/seedData'
 import { useUnitsStore } from './units'
-import { useUnitTypesStore } from './unitTypes'
 import type { Item, UnitPreset } from '../types'
 
 export const useItemsStore = defineStore('items', () => {
@@ -97,36 +96,11 @@ export const useItemsStore = defineStore('items', () => {
 
       if (error) throw error
 
-      // Resolve unit type name + units for preset generation
-      const unitsStore = useUnitsStore()
-      const unitTypesStore = useUnitTypesStore()
-      if (!unitsStore.units.length) await unitsStore.fetch()
-      if (!unitTypesStore.unitTypes.length) await unitTypesStore.fetch()
-
-      const unitType = unitTypeId ? unitTypesStore.byId[unitTypeId] : null
-      const unitsForType = unitTypeId ? unitsStore.forType(unitTypeId) : []
-      const presets = buildUnitPresetsForItem(data.id, unitType?.name ?? 'count', unitsForType)
-
-      if (presets.length > 0) {
-        const { error: presetError } = await supabase!
-          .from('unit_presets')
-          .insert(presets.map(({ id: _id, ...preset }) => preset))
-
-        if (presetError) console.error('Failed to create unit presets for item:', presetError)
-      }
-
       items.value.push(data)
-      unitPresets.value.push(...presets.map((p, i) => ({ ...p, id: `preset-${data.id}-${i + 1}` })))
       return data
     }
 
-    // Seed/local mode
-    const unitType = seedUnitTypes.find(ut => ut.id === unitTypeId)
-    const unitsForType = seedUnits.filter(u => u.unit_type_id === unitTypeId)
-    const presets = buildUnitPresetsForItem(newItem.id, unitType?.name ?? 'count', unitsForType)
-
     items.value.push(newItem)
-    unitPresets.value.push(...presets)
     return newItem
   }
 
