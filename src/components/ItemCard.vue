@@ -4,7 +4,13 @@
     :class="cardClasses"
     @click="$emit('click')"
   >
-    <span class="text-sm font-semibold text-white">{{ item.name }}</span>
+    <span class="flex items-center gap-2">
+      <span class="text-sm font-semibold text-white">{{ item.name }}</span>
+      <span
+        v-if="due && !inList"
+        class="rounded-full border border-fuchsia-400/30 bg-fuchsia-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-fuchsia-200"
+      >Due</span>
+    </span>
     <span class="text-xs capitalize text-slate-400">{{ getDefaultUnitLabel(item) }}</span>
     <span v-if="inList" class="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-400 text-[11px] font-bold text-slate-950">✓</span>
     <span
@@ -25,6 +31,7 @@ const props = defineProps<{
   item: Item
   inList: boolean
   inListAmount: string
+  due?: boolean
 }>()
 
 const unitTypeStore = useUnitTypesStore()

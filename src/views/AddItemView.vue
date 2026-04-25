@@ -49,6 +49,13 @@ const frequentItems = computed(() => {
     .filter((i): i is Item => !!i && i.is_active)
 })
 
+// Items predicted to be running low based on purchase cadence
+const dueItems = computed(() => {
+  return itemsStore.dueItemIds
+    .map(id => itemsStore.byId[id])
+    .filter((i): i is Item => !!i && i.is_active && !isInList(i.id))
+})
+
 interface CategoryGroup {
   categoryId: string
   name: string
@@ -135,6 +142,7 @@ onMounted(() => {
   categoriesStore.fetch()
   itemsStore.fetch()
   itemsStore.fetchFrequent()
+  itemsStore.fetchDue()
   shopListStore.fetch()
   unitTypeStore.fetch()
 })
@@ -199,6 +207,14 @@ async function handleAddToList({ amount, unit_id }: { amount: number; unit_id: s
     </div>
 
     <CategoryFilter v-model="selectedCategory" :categories="categoriesStore.sorted" />
+
+    <section v-if="!searchQuery && !selectedCategory && dueItems.length > 0" class="space-y-3">
+      <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-fuchsia-300">Due to Buy</h3>
+      <div class="flex flex-col gap-3">
+        <ItemCard v-for="item in dueItems" :key="item.id" :item="item" :in-list="isInList(item.id)"
+          :in-list-amount="inListAmountLabel(item.id)" due @click="onItemClick(item)" />
+      </div>
+    </section>
 
     <section v-if="!searchQuery && !selectedCategory && frequentItems.length > 0" class="space-y-3">
       <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Frequently Bought</h3>

@@ -9,6 +9,7 @@ export const useItemsStore = defineStore('items', () => {
   const items = ref<Item[]>([])
   const unitPresets = ref<UnitPreset[]>([])
   const frequentItemIds = ref<string[]>([])
+  const dueItemIds = ref<string[]>([])
   const loading = ref(false)
 
   const byCategory = computed(() => {
@@ -242,6 +243,65 @@ export const useItemsStore = defineStore('items', () => {
       .map(([id]) => id)
   }
 
+  async function fetchDue(limit = 8): Promise<void> {
+    if (!isSupabaseConfigured) {
+      dueItemIds.value = []
+      return
+    }
+
+    const { useListsStore } = await import('./lists')
+    const listsStore = useListsStore()
+    if (!listsStore.currentListId) {
+      dueItemIds.value = []
+      return
+    }
+
+    const { data, error } = await supabase!
+      .from('purchase_history')
+      .select('item_id, bought_at, shop_sessions!inner(list_id)')
+      .eq('shop_sessions.list_id', listsStore.currentListId)
+      .order('bought_at', { ascending: false })
+      .limit(500)
+
+    if (error) {
+      console.error('Failed to fetch due items:', error)
+      dueItemIds.value = []
+      return
+    }
+
+    const byItem = new Map<string, number[]>()
+    for (const row of data ?? []) {
+      const ts = new Date(row.bought_at).getTime()
+      const list = byItem.get(row.item_id) ?? []
+      list.push(ts)
+      byItem.set(row.item_id, list)
+    }
+
+    const now = Date.now()
+    const DAY_MS = 86_400_000
+    const ranked: Array<{ id: string; ratio: number }> = []
+
+    for (const [itemId, timestamps] of byItem) {
+      if (timestamps.length < 2) continue
+      timestamps.sort((a, b) => a - b)
+      let totalGap = 0
+      for (let i = 1; i < timestamps.length; i++) {
+        totalGap += timestamps[i] - timestamps[i - 1]
+      }
+      const avgGapDays = totalGap / (timestamps.length - 1) / DAY_MS
+      if (avgGapDays <= 0) continue
+      const lastBought = timestamps[timestamps.length - 1]
+      const daysSinceLast = (now - lastBought) / DAY_MS
+      const ratio = daysSinceLast / avgGapDays
+      if (ratio >= 0.85) ranked.push({ id: itemId, ratio })
+    }
+
+    dueItemIds.value = ranked
+      .sort((a, b) => b.ratio - a.ratio)
+      .slice(0, limit)
+      .map(r => r.id)
+  }
+
   async function removePreset(presetId: string): Promise<void> {
     if (isSupabaseConfigured) {
       const { error } = await supabase!.from('unit_presets').delete().eq('id', presetId)
@@ -253,5 +313,5 @@ export const useItemsStore = defineStore('items', () => {
     unitPresets.value = unitPresets.value.filter(p => p.id !== presetId)
   }
 
-  return { items, unitPresets, frequentItemIds, loading, byCategory, byId, presetsForItem, search, fetch, fetchFrequent, createItem, updateItem, removeItem, saveCustomPreset, removePreset }
+  return { items, unitPresets, frequentItemIds, dueItemIds, loading, byCategory, byId, presetsForItem, search, fetch, fetchFrequent, fetchDue, createItem, updateItem, removeItem, saveCustomPreset, removePreset }
 })
