@@ -42,9 +42,11 @@ function inListAmountLabel(itemId: string) {
   return `${entry.requested_amount} ${entry._requestedUnitLabel}`
 }
 
-// Frequently bought items (stub: just the first 6 items for now)
+// Frequently bought items, ranked by purchase_history for the current list
 const frequentItems = computed(() => {
-  return itemsStore.items.filter(i => i.is_active).slice(0, 6)
+  return itemsStore.frequentItemIds
+    .map(id => itemsStore.byId[id])
+    .filter((i): i is Item => !!i && i.is_active)
 })
 
 interface CategoryGroup {
@@ -132,6 +134,7 @@ async function handleCreateItemSubmit({ name, categoryId, unitTypeId }: { name: 
 onMounted(() => {
   categoriesStore.fetch()
   itemsStore.fetch()
+  itemsStore.fetchFrequent()
   shopListStore.fetch()
   unitTypeStore.fetch()
 })

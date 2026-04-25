@@ -8,6 +8,7 @@ import type { Item, UnitPreset } from '../types'
 export const useItemsStore = defineStore('items', () => {
   const items = ref<Item[]>([])
   const unitPresets = ref<UnitPreset[]>([])
+  const frequentItemIds = ref<string[]>([])
   const loading = ref(false)
 
   const byCategory = computed(() => {
@@ -205,6 +206,42 @@ export const useItemsStore = defineStore('items', () => {
     }
   }
 
+  async function fetchFrequent(limit = 6): Promise<void> {
+    if (!isSupabaseConfigured) {
+      frequentItemIds.value = []
+      return
+    }
+
+    const { useListsStore } = await import('./lists')
+    const listsStore = useListsStore()
+    if (!listsStore.currentListId) {
+      frequentItemIds.value = []
+      return
+    }
+
+    const { data, error } = await supabase!
+      .from('purchase_history')
+      .select('item_id, shop_sessions!inner(list_id)')
+      .eq('shop_sessions.list_id', listsStore.currentListId)
+      .order('bought_at', { ascending: false })
+      .limit(500)
+
+    if (error) {
+      console.error('Failed to fetch frequent items:', error)
+      frequentItemIds.value = []
+      return
+    }
+
+    const counts = new Map<string, number>()
+    for (const row of data ?? []) {
+      counts.set(row.item_id, (counts.get(row.item_id) ?? 0) + 1)
+    }
+    frequentItemIds.value = [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([id]) => id)
+  }
+
   async function removePreset(presetId: string): Promise<void> {
     if (isSupabaseConfigured) {
       const { error } = await supabase!.from('unit_presets').delete().eq('id', presetId)
@@ -216,5 +253,5 @@ export const useItemsStore = defineStore('items', () => {
     unitPresets.value = unitPresets.value.filter(p => p.id !== presetId)
   }
 
-  return { items, unitPresets, loading, byCategory, byId, presetsForItem, search, fetch, createItem, updateItem, removeItem, saveCustomPreset, removePreset }
+  return { items, unitPresets, frequentItemIds, loading, byCategory, byId, presetsForItem, search, fetch, fetchFrequent, createItem, updateItem, removeItem, saveCustomPreset, removePreset }
 })
