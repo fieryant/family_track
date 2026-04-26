@@ -208,9 +208,16 @@ export const useShopListStore = defineStore('shopList', () => {
   }
 
   async function carryPendingToSession(sessionId: string) {
-    const pendingItems = listItems.value.filter(i => i.status === 'pending')
+    const toCarry = listItems.value.flatMap(i => {
+      if (i.status === 'pending') return [{ item: i, amount: i.requested_amount }]
+      if (i.status === 'partial') {
+        const remaining = i.requested_amount - (i.bought_amount ?? 0)
+        if (remaining > 0) return [{ item: i, amount: remaining }]
+      }
+      return []
+    })
 
-    if (pendingItems.length === 0) {
+    if (toCarry.length === 0) {
       listItems.value = []
       return
     }
@@ -219,10 +226,10 @@ export const useShopListStore = defineStore('shopList', () => {
       const { data, error } = await supabase!
         .from('shop_list_items')
         .insert(
-          pendingItems.map(item => ({
+          toCarry.map(({ item, amount }) => ({
             session_id: sessionId,
             item_id: item.item_id,
-            requested_amount: item.requested_amount,
+            requested_amount: amount,
             requested_unit_id: item.requested_unit_id,
           }))
         )
@@ -238,13 +245,15 @@ export const useShopListStore = defineStore('shopList', () => {
       return
     }
 
-    listItems.value = pendingItems.map(item => ({
+    listItems.value = toCarry.map(({ item, amount }) => ({
       ...item,
       id: 'sli-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
       session_id: sessionId,
+      requested_amount: amount,
       status: 'pending' as ShopListStatus,
       bought_amount: null,
       bought_unit_id: null,
+      price: null,
       updated_at: new Date().toISOString(),
     }))
   }
