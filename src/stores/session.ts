@@ -82,6 +82,7 @@ export const useSessionStore = defineStore('session', () => {
     requested_amount: number
     bought_unit_id: string | null
     requested_unit_id: string
+    price?: number | null
     _name?: string
     _requestedUnitLabel?: string
     _boughtUnitLabel?: string | null
@@ -100,6 +101,7 @@ export const useSessionStore = defineStore('session', () => {
           item_id: item.item_id,
           amount: item.bought_amount ?? item.requested_amount,
           unit_id: item.bought_unit_id ?? item.requested_unit_id,
+          price: item.price ?? null,
         }))
         await supabase!.from('purchase_history').insert(historyRecords)
 
@@ -113,6 +115,7 @@ export const useSessionStore = defineStore('session', () => {
         name: item._name ?? 'Unknown',
         amount: item.bought_amount ?? item.requested_amount,
         unit: item._boughtUnitLabel ?? item._requestedUnitLabel ?? '',
+        price: item.price ?? null,
       }))
 
       pastSessions.value.unshift({
@@ -130,6 +133,7 @@ export const useSessionStore = defineStore('session', () => {
         name: item._name ?? 'Unknown',
         amount: item.bought_amount ?? item.requested_amount,
         unit: item._boughtUnitLabel ?? item._requestedUnitLabel ?? '',
+        price: item.price ?? null,
       }))
 
       pastSessions.value.unshift({
@@ -183,7 +187,7 @@ export const useSessionStore = defineStore('session', () => {
     try {
       const { data, error } = await supabase!
         .from('purchase_history')
-        .select(`amount, unit_id, unit:units(label), item:items(name)`)
+        .select(`amount, unit_id, price, unit:units(label), item:items(name)`)
         .eq('session_id', sessionId)
         .order('bought_at', { ascending: true })
 
@@ -192,12 +196,14 @@ export const useSessionStore = defineStore('session', () => {
       const items: SessionItem[] = (data ?? []).map((entry: {
         amount: number
         unit_id: string
+        price: number | null
         unit: { label: string }[] | { label: string } | null
         item: { name: string }[] | { name: string } | null
       }) => ({
         name: (Array.isArray(entry.item) ? entry.item[0]?.name : entry.item?.name) ?? 'Unknown',
         amount: entry.amount,
         unit: (Array.isArray(entry.unit) ? entry.unit[0]?.label : entry.unit?.label) ?? '',
+        price: entry.price ?? null,
       }))
 
       sessionItemsById.value = { ...sessionItemsById.value, [sessionId]: items }

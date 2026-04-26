@@ -10,6 +10,7 @@ export const useItemsStore = defineStore('items', () => {
   const unitPresets = ref<UnitPreset[]>([])
   const frequentItemIds = ref<string[]>([])
   const dueItemIds = ref<string[]>([])
+  const lastPrices = ref<Record<string, number>>({})
   const loading = ref(false)
 
   const byCategory = computed(() => {
@@ -302,6 +303,37 @@ export const useItemsStore = defineStore('items', () => {
       .map(r => r.id)
   }
 
+  async function fetchLastPrices(): Promise<void> {
+    if (!isSupabaseConfigured) return
+
+    const { useListsStore } = await import('./lists')
+    const listsStore = useListsStore()
+    if (!listsStore.currentListId) return
+
+    const { data, error } = await supabase!
+      .from('purchase_history')
+      .select('item_id, price, bought_at, shop_sessions!inner(list_id)')
+      .eq('shop_sessions.list_id', listsStore.currentListId)
+      .not('price', 'is', null)
+      .order('bought_at', { ascending: false })
+      .limit(500)
+
+    if (error) {
+      console.error('Failed to fetch last prices:', error)
+      return
+    }
+
+    const seen = new Set<string>()
+    const result: Record<string, number> = {}
+    for (const row of (data ?? []) as { item_id: string; price: number }[]) {
+      if (!seen.has(row.item_id)) {
+        seen.add(row.item_id)
+        result[row.item_id] = row.price
+      }
+    }
+    lastPrices.value = result
+  }
+
   async function removePreset(presetId: string): Promise<void> {
     if (isSupabaseConfigured) {
       const { error } = await supabase!.from('unit_presets').delete().eq('id', presetId)
@@ -313,5 +345,5 @@ export const useItemsStore = defineStore('items', () => {
     unitPresets.value = unitPresets.value.filter(p => p.id !== presetId)
   }
 
-  return { items, unitPresets, frequentItemIds, dueItemIds, loading, byCategory, byId, presetsForItem, search, fetch, fetchFrequent, fetchDue, createItem, updateItem, removeItem, saveCustomPreset, removePreset }
+  return { items, unitPresets, frequentItemIds, dueItemIds, lastPrices, loading, byCategory, byId, presetsForItem, search, fetch, fetchFrequent, fetchDue, fetchLastPrices, createItem, updateItem, removeItem, saveCustomPreset, removePreset }
 })

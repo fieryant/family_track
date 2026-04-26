@@ -154,6 +154,7 @@ onMounted(() => {
   itemsStore.fetch()
   itemsStore.fetchFrequent()
   itemsStore.fetchDue()
+  itemsStore.fetchLastPrices()
   unitsStore.fetch()
   pantryStore.fetch()
   shopListStore.fetch()
@@ -225,7 +226,7 @@ async function handleAddToList({ amount, unit_id }: { amount: number; unit_id: s
       <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-fuchsia-300">Due to Buy</h3>
       <div class="flex flex-col gap-3">
         <ItemCard v-for="item in dueItems" :key="item.id" :item="item" :in-list="isInList(item.id)"
-          :in-list-amount="inListAmountLabel(item.id)" :pantry-amount="pantryAmountLabel(item.id)" due @click="onItemClick(item)" />
+          :in-list-amount="inListAmountLabel(item.id)" :pantry-amount="pantryAmountLabel(item.id)" :last-price="itemsStore.lastPrices[item.id]" due @click="onItemClick(item)" />
       </div>
     </section>
 
@@ -233,7 +234,7 @@ async function handleAddToList({ amount, unit_id }: { amount: number; unit_id: s
       <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Frequently Bought</h3>
       <div class="flex flex-col gap-3">
         <ItemCard v-for="item in frequentItems" :key="item.id" :item="item" :in-list="isInList(item.id)"
-          :in-list-amount="inListAmountLabel(item.id)" :pantry-amount="pantryAmountLabel(item.id)" @click="onItemClick(item)" />
+          :in-list-amount="inListAmountLabel(item.id)" :pantry-amount="pantryAmountLabel(item.id)" :last-price="itemsStore.lastPrices[item.id]" @click="onItemClick(item)" />
       </div>
     </section>
 
@@ -241,7 +242,7 @@ async function handleAddToList({ amount, unit_id }: { amount: number; unit_id: s
       <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{{ group.icon }} {{ group.name }}</h3>
       <div class="flex flex-col gap-3">
         <ItemCard v-for="item in group.items" :key="item.id" :item="item" :in-list="isInList(item.id)"
-          :in-list-amount="inListAmountLabel(item.id)" :pantry-amount="pantryAmountLabel(item.id)" @click="onItemClick(item)" />
+          :in-list-amount="inListAmountLabel(item.id)" :pantry-amount="pantryAmountLabel(item.id)" :last-price="itemsStore.lastPrices[item.id]" @click="onItemClick(item)" />
       </div>
     </section>
 

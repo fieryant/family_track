@@ -157,7 +157,8 @@ export const useShopListStore = defineStore('shopList', () => {
     listItemId: string,
     status: ShopListStatus,
     boughtAmount: number | null = null,
-    boughtUnitId: string | null = null
+    boughtUnitId: string | null = null,
+    price: number | null = null
   ) {
     const idx = listItems.value.findIndex(i => i.id === listItemId)
     if (idx === -1) return
@@ -167,11 +168,12 @@ export const useShopListStore = defineStore('shopList', () => {
       status,
       bought_amount: boughtAmount,
       bought_unit_id: boughtUnitId,
+      price,
       updated_at: new Date().toISOString(),
     }
 
     if (isSupabaseConfigured) {
-      const update: Record<string, unknown> = { status }
+      const update: Record<string, unknown> = { status, price }
       if (boughtAmount !== null) update.bought_amount = boughtAmount
       if (boughtUnitId !== null) update.bought_unit_id = boughtUnitId
 
@@ -203,15 +205,6 @@ export const useShopListStore = defineStore('shopList', () => {
     if (isSupabaseConfigured) {
       await supabase!.from('shop_list_items').delete().eq('id', listItemId)
     }
-  }
-
-  async function toggleBought(listItemId: string) {
-    const item = listItems.value.find(i => i.id === listItemId)
-    if (!item) return
-    const newStatus: ShopListStatus = item.status === 'bought' ? 'pending' : 'bought'
-    const boughtAmount = newStatus === 'bought' ? item.requested_amount : null
-    const boughtUnitId = newStatus === 'bought' ? item.requested_unit_id : null
-    await updateStatus(listItemId, newStatus, boughtAmount, boughtUnitId)
   }
 
   async function carryPendingToSession(sessionId: string) {
@@ -275,7 +268,6 @@ export const useShopListStore = defineStore('shopList', () => {
     updateRequested,
     updateStatus,
     removeItem,
-    toggleBought,
     carryPendingToSession,
     clearList,
     toggleShoppingMode,

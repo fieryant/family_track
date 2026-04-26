@@ -53,6 +53,7 @@ export interface SessionItem {
   name: string
   amount: number
   unit: string  // resolved label for display (joined from units)
+  price?: number | null  // per-unit price
 }
 
 export type ShopListStatus = 'pending' | 'bought' | 'partial' | 'removed'
@@ -69,6 +70,7 @@ export interface ShopListItem {
   note: string | null
   added_at: string
   updated_at: string
+  price?: number | null  // per-unit price recorded at time of purchase
   // Denormalised fields joined/resolved at fetch time
   _name: string
   _categoryId: string | null

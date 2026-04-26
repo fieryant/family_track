@@ -57,6 +57,7 @@ Write operations generate client-side IDs (prefixed strings like `cat-timestamp`
 | `shopList.ts` | Active session items | `groupedByCategory`, `summary` | `addItem()`, `updateStatus()`, `carryPendingToSession()` |
 | `session.ts` | Shopping session lifecycle | `hasActiveSession` | `fetchActive()`, `createSession()`, `completeSession()` |
 | `lists.ts` | Shared family lists | `currentList` | `createList()`, `joinList()`, `addMemberByEmail()` |
+| `pantry.ts` | Home inventory tracking | `byItemId` | `fetch()`, `setAmount()`, `applyPurchases()` |
 
 ### Router (`src/router/index.ts`)
 
@@ -67,6 +68,7 @@ Routes with auth guards:
 - `/item/:id` — ItemDetailView
 - `/history` — HistoryView (past sessions with purchase log)
 - `/lists` — ListsView (create/join shared lists)
+- `/pantry` — PantryView (home inventory)
 - `/settings` — SettingsView hub
 - `/settings/categories`, `/settings/units`, `/settings/unit-types`, `/settings/items` — admin views
 
@@ -97,15 +99,20 @@ const props = defineProps<{ items: Item[] }>()
 
 ### Database Schema
 
-Multiple migration files under `supabase/`:
-- `migration.sql` — core tables: `categories`, `unit_types`, `units`, `items`, `unit_presets`, `shop_sessions`, `shop_list_items`, `purchase_history`
-- `lists_migration.sql` — `shopping_lists` + `list_members` tables; adds `list_id` FK to `shop_sessions`
-- `rls.sql` / `lists_rls.sql` — Row Level Security policies (list membership gates all session/item access)
-- `lists_functions.sql` — `add_list_member_by_email()` RPC (security definer, owner-only)
+Timestamped migrations under `supabase/migrations/`:
+- `20260408053702_initial_family_market_schema.sql` — core tables: `categories`, `unit_types`, `units`, `items`, `unit_presets`, `shop_sessions`, `shop_list_items`, `purchase_history`
+- `20260408053943_public_app_rls_policies.sql` — Row Level Security policies
+- `20260415070705_add_shopping_lists.sql` — `shopping_lists` + `list_members` tables; adds `list_id` FK to `shop_sessions`
+- `20260415070743_lists_rls_policies.sql` — list-scoped RLS (list membership gates all session/item access)
+- `20260415070932_fix_list_members_rls_recursion.sql` / `20260415071314_fix_shopping_lists_select_policy.sql` — RLS corrections
+- `20260415071734_add_list_member_by_email_fn.sql` — `add_list_member_by_email()` RPC (security definer, owner-only)
+- `20260425192315_pantry_migration.sql` — `pantry_items` table for home inventory tracking
 
 Key status values for `shop_list_items.status`: `pending` / `bought` / `partial` / `removed`
 
 `purchase_history` is an immutable log — never update rows, only insert on session completion.
+
+Domain types are in `src/types/index.ts`: `Category`, `UnitType`, `Unit`, `Item`, `UnitPreset`, `ShopSession`, `ShopListItem`, `ShoppingList`, `ListMember`, `PantryItem`.
 
 When adding seed items to `src/lib/seedData.ts`, maintain the UUID-style `id` and `sort_order` fields.
 

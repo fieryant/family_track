@@ -12,6 +12,7 @@
       >Due</span>
     </span>
     <span class="text-xs capitalize text-slate-400">{{ getDefaultUnitLabel(item) }}</span>
+    <span v-if="lastPrice" class="text-[11px] text-slate-500">last {{ lastPrice.toFixed(2) }}/unit</span>
     <span v-if="pantryAmount" class="text-[11px] font-semibold text-cyan-300">🥫 {{ pantryAmount }} in pantry</span>
     <span v-if="inList" class="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-400 text-[11px] font-bold text-slate-950">✓</span>
     <span
@@ -34,6 +35,7 @@ const props = defineProps<{
   inListAmount: string
   due?: boolean
   pantryAmount?: string
+  lastPrice?: number
 }>()
 
 const unitTypeStore = useUnitTypesStore()

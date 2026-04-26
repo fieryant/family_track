@@ -49,7 +49,10 @@
                   class="flex items-center justify-between rounded-xl border border-white/10 bg-white/3 px-3 py-2"
                 >
                   <span class="text-sm text-slate-200">{{ entry.name }}</span>
-                  <span class="text-xs font-semibold text-cyan-200">{{ entry.amount }} {{ entry.unit }}</span>
+                  <div class="flex flex-col items-end gap-0.5">
+                    <span class="text-xs font-semibold text-cyan-200">{{ entry.amount }} {{ entry.unit }}</span>
+                    <span v-if="entry.price" class="text-[11px] text-slate-500">{{ entry.price.toFixed(2) }}/unit</span>
+                  </div>
                 </li>
               </ul>
 

@@ -34,8 +34,8 @@
           :key="item.id"
           :item="item"
           :shopping-mode="shopListStore.shoppingMode"
-          @toggle="shopListStore.toggleBought($event)"
-          @partial="openPartialDialog($event)"
+          @toggle="handleToggle($event)"
+          @partial="handlePartial($event)"
           @remove="shopListStore.removeItem($event)"
         />
       </CategoryGroup>
@@ -70,11 +70,12 @@
       Complete Shopping
     </button>
 
-    <PartialBuyDialog
-      :show="showPartialDialog"
-      :item="partialItem ?? undefined"
-      @close="showPartialDialog = false"
-      @confirm="handlePartialConfirm"
+    <BuyConfirmDialog
+      :show="showBuyDialog"
+      :item="buyDialogItem ?? undefined"
+      :mode="buyDialogMode"
+      @close="showBuyDialog = false"
+      @confirm="handleBuyConfirm"
     />
 
     <SessionCompleteDialog
@@ -95,7 +96,7 @@ import { useCategoriesStore } from '../stores/categories'
 import { useItemsStore } from '../stores/items'
 import CategoryGroup from '../components/CategoryGroup.vue'
 import ShopListItem from '../components/ShopListItem.vue'
-import PartialBuyDialog from '../components/PartialBuyDialog.vue'
+import BuyConfirmDialog from '../components/BuyConfirmDialog.vue'
 import SessionCompleteDialog from '../components/SessionCompleteDialog.vue'
 
 const shopListStore = useShopListStore()
@@ -104,9 +105,10 @@ const categoriesStore = useCategoriesStore()
 const itemsStore = useItemsStore()
 
 const filter = ref('all')
-const showPartialDialog = ref(false)
+const showBuyDialog = ref(false)
+const buyDialogMode = ref<'bought' | 'partial'>('bought')
+const buyDialogItem = ref<ShopListItemData | null>(null)
 const showCompleteDialog = ref(false)
-const partialItem = ref<ShopListItemData | null>(null)
 
 const filteredGroups = computed(() => {
   return shopListStore.groupedByCategory
@@ -127,17 +129,30 @@ const progressPercent = computed(() => {
   return Math.round(((bought + partial) / active) * 100)
 })
 
-function openPartialDialog(item: ShopListItemData) {
-  partialItem.value = item
-  showPartialDialog.value = true
+function handleToggle(itemId: string) {
+  const item = shopListStore.listItems.find(i => i.id === itemId)
+  if (!item) return
+  if (item.status === 'bought') {
+    shopListStore.updateStatus(item.id, 'pending', null, null, null)
+  } else {
+    buyDialogItem.value = item
+    buyDialogMode.value = 'bought'
+    showBuyDialog.value = true
+  }
 }
 
-async function handlePartialConfirm({ amount, unit_id }: { amount: number; unit_id: string }) {
-  if (partialItem.value) {
-    await shopListStore.updateStatus(partialItem.value.id, 'partial', amount, unit_id)
-  }
-  showPartialDialog.value = false
-  partialItem.value = null
+function handlePartial(item: ShopListItemData) {
+  buyDialogItem.value = item
+  buyDialogMode.value = 'partial'
+  showBuyDialog.value = true
+}
+
+async function handleBuyConfirm({ amount, unit_id, price }: { amount: number; unit_id: string; price: number | null }) {
+  if (!buyDialogItem.value) return
+  const status = buyDialogMode.value
+  await shopListStore.updateStatus(buyDialogItem.value.id, status, amount, unit_id, price)
+  showBuyDialog.value = false
+  buyDialogItem.value = null
 }
 
 async function handleCompleteSession() {
