@@ -8,7 +8,10 @@ import EmptyState from '../components/EmptyState.vue'
 import Modal from '../components/Modal.vue'
 import FormInput from '../components/FormInput.vue'
 import FormSelect from '../components/FormSelect.vue'
-import type { PantryItem } from '../types'
+import SearchBar from '../components/SearchBar.vue'
+import ItemCard from '../components/ItemCard.vue'
+import UnitPresetPicker from '../components/UnitPresetPicker.vue'
+import type { Item, PantryItem } from '../types'
 
 const pantry = usePantryStore()
 const itemsStore = useItemsStore()
@@ -79,6 +82,33 @@ async function removeRow(row: PantryRow) {
   await pantry.remove(row.entry.item_id)
 }
 
+const showAdd = ref(false)
+const addSearch = ref('')
+const pickerItem = ref<Item | null>(null)
+
+const addCandidates = computed<Item[]>(() => {
+  return itemsStore
+    .search(addSearch.value)
+    .filter(i => i.is_active && !pantry.byItemId[i.id])
+    .slice(0, 50)
+})
+
+function openAdd() {
+  addSearch.value = ''
+  showAdd.value = true
+}
+
+function pickItem(item: Item) {
+  pickerItem.value = item
+}
+
+async function handlePickerConfirm({ amount, unit_id }: { amount: number; unit_id: string }) {
+  if (!pickerItem.value) return
+  await pantry.setAmount(pickerItem.value.id, amount, unit_id || null)
+  pickerItem.value = null
+  showAdd.value = false
+}
+
 onMounted(async () => {
   await Promise.all([
     itemsStore.fetch(),
@@ -99,10 +129,14 @@ onMounted(async () => {
           <polyline points="15 18 9 12 15 6" />
         </svg>
       </router-link>
-      <div>
+      <div class="flex-1">
         <h2 class="text-2xl font-bold tracking-tight text-white">Pantry</h2>
         <p class="text-sm text-slate-400">What's currently at home. Auto-updates when you complete a shop.</p>
       </div>
+      <button type="button"
+        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-cyan-400/30 bg-cyan-400/10 text-xl font-semibold text-cyan-200 transition hover:bg-cyan-400/20"
+        aria-label="Add item to pantry"
+        @click="openAdd">+</button>
     </div>
 
     <EmptyState v-if="!pantry.loading && rows.length === 0" title="Pantry is empty"
@@ -134,6 +168,22 @@ onMounted(async () => {
         </div>
       </div>
     </div>
+
+    <Modal :show="showAdd" @close="showAdd = false">
+      <div class="space-y-3">
+        <h3 class="text-lg font-bold text-white">Add to Pantry</h3>
+        <SearchBar v-model="addSearch" placeholder="Search items..." />
+        <div class="flex max-h-[60vh] flex-col gap-2 overflow-y-auto">
+          <ItemCard v-for="item in addCandidates" :key="item.id" :item="item" :in-list="false" :in-list-amount="''"
+            @click="pickItem(item)" />
+          <EmptyState v-if="addCandidates.length === 0" title="No matches"
+            message="Try a different search, or all items are already in your pantry." />
+        </div>
+      </div>
+    </Modal>
+
+    <UnitPresetPicker :show="!!pickerItem" :item="pickerItem ?? undefined" @close="pickerItem = null"
+      @confirm="handlePickerConfirm" />
 
     <Modal :show="!!editing" @close="closeEdit">
       <div class="space-y-3">

@@ -8,13 +8,6 @@ const authStore = useAuthStore()
 
 const menuItems = [
   {
-    to: '/pantry',
-    icon: '🥫',
-    bg: 'bg-cyan-400/10',
-    label: 'Pantry',
-    description: "What's currently at home",
-  },
-  {
     to: '/settings/unit-types',
     icon: '⚖️',
     bg: 'bg-amber-400/10',

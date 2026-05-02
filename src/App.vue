@@ -58,7 +58,7 @@ const showChrome = computed(() =>
         id="bottom-nav"
         class="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur-xl"
       >
-        <div class="mx-auto grid w-full max-w-2xl grid-cols-4 gap-2 px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+        <div class="mx-auto grid w-full max-w-2xl grid-cols-5 gap-2 px-3 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
           <router-link v-slot="{ href, navigate, isActive }" to="/" custom>
             <a
               id="nav-home"
@@ -101,6 +101,21 @@ const showChrome = computed(() =>
             >
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               <span>History</span>
+            </a>
+          </router-link>
+
+          <router-link v-slot="{ href, navigate, isActive }" to="/pantry" custom>
+            <a
+              id="nav-pantry"
+              :href="href"
+              :class="[
+                'flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2 text-xs font-medium transition',
+                isActive ? 'bg-indigo-400/10 text-indigo-300 shadow-[0_0_0_1px_rgba(129,140,248,0.18)]' : 'text-slate-400 hover:bg-white/5 hover:text-slate-100',
+              ]"
+              @click="navigate"
+            >
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8"/><path d="M7 2v3a3 3 0 0 0 .8 2.05L9 8.5V21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V8.5l1.2-1.45A3 3 0 0 0 17 5V2"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
+              <span>Pantry</span>
             </a>
           </router-link>
 
