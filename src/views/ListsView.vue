@@ -24,6 +24,10 @@ const shareTarget = ref<ShoppingList | null>(null)
 
 const confirmDeleteId = ref<string | null>(null)
 
+const editTarget = ref<ShoppingList | null>(null)
+const editName = ref('')
+const savingEdit = ref(false)
+
 async function handleCreate() {
   const name = newListName.value.trim()
   if (!name) return
@@ -58,6 +62,24 @@ async function selectList(id: string) {
   sessionStore.activeSession = null
   shopListStore.clearList()
   router.push('/')
+}
+
+function openEdit(list: ShoppingList) {
+  editTarget.value = list
+  editName.value = list.name
+}
+
+async function handleEdit() {
+  if (!editTarget.value) return
+  const name = editName.value.trim()
+  if (!name || name === editTarget.value.name) {
+    editTarget.value = null
+    return
+  }
+  savingEdit.value = true
+  await listsStore.renameList(editTarget.value.id, name)
+  savingEdit.value = false
+  editTarget.value = null
 }
 
 async function handleDelete(list: ShoppingList) {
@@ -156,6 +178,15 @@ onMounted(() => listsStore.fetch())
             @click="shareTarget = list"
           >
             Share Code
+          </button>
+          <button
+            v-if="list._role === 'owner'"
+            type="button"
+            class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+            @click="openEdit(list)"
+            aria-label="Rename list"
+          >
+            Edit
           </button>
           <button
             v-if="list.id !== listsStore.currentListId"
@@ -311,6 +342,47 @@ onMounted(() => listsStore.fetch())
               </button>
             </div>
           </template>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- ── Edit dialog ───────────────────────────────────────────────────── -->
+    <Teleport to="body">
+      <div
+        v-if="editTarget"
+        class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+        @click.self="editTarget = null"
+      >
+        <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"></div>
+        <div class="relative w-full max-w-sm rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl">
+          <h3 class="mb-4 text-base font-bold text-white">Rename List</h3>
+          <input
+            v-model="editName"
+            type="text"
+            placeholder="List name"
+            maxlength="50"
+            class="w-full rounded-xl border border-white/10 bg-slate-800 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20"
+            @keydown.enter="handleEdit"
+            @keydown.escape="editTarget = null"
+          />
+          <div class="mt-4 flex gap-2">
+            <button
+              type="button"
+              class="flex-1 rounded-xl border border-white/10 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5"
+              @click="editTarget = null"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              :disabled="!editName.trim() || savingEdit"
+              class="flex-1 rounded-xl bg-cyan-400 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:opacity-40"
+              @click="handleEdit"
+            >
+              <span v-if="savingEdit">Saving…</span>
+              <span v-else>Save</span>
+            </button>
+          </div>
         </div>
       </div>
     </Teleport>
