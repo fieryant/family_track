@@ -114,7 +114,15 @@ Key status values for `shop_list_items.status`: `pending` / `bought` / `partial`
 
 Domain types are in `src/types/index.ts`: `Category`, `UnitType`, `Unit`, `Item`, `UnitPreset`, `ShopSession`, `ShopListItem`, `ShoppingList`, `ListMember`, `PantryItem`.
 
+`ShopListItem` and `PurchaseHistory` both carry an optional `price?: number | null` (per-unit price at time of purchase). Include it when inserting purchase history rows.
+
+`src/lib/supabase.ts` exports `supabase` (nullable — `SupabaseClient | null`) and `isSupabaseConfigured` (boolean). Always gate on `isSupabaseConfigured` before using the client; never assume `supabase` is non-null.
+
 When adding seed items to `src/lib/seedData.ts`, maintain the UUID-style `id` and `sort_order` fields.
+
+## Testing
+
+No test framework is configured. There are no test scripts in `package.json`.
 
 ## graphify
 
