@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AppHeader from './components/AppHeader.vue'
+import VoiceAssistant from './components/VoiceAssistant.vue'
 import { useAuthStore } from './stores/auth'
 import { isSupabaseConfigured } from './lib/supabase'
 
@@ -52,6 +53,8 @@ const showChrome = computed(() =>
           </transition>
         </router-view>
       </main>
+
+      <VoiceAssistant v-if="showChrome" />
 
       <nav
         v-if="showChrome"
