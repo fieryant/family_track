@@ -31,7 +31,7 @@
 
     <div class="min-w-0 flex-1">
       <span :class="['block text-sm font-semibold', item.status === 'bought' || item.status === 'removed' ? 'text-slate-400 line-through' : 'text-slate-100']">
-        {{ item._name }}
+        {{ displayName }}
       </span>
       <span class="text-xs text-slate-400">
         {{ item.requested_amount }} {{ item._requestedUnitLabel }}
@@ -67,6 +67,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import type { ShopListItem, ShopListStatus } from '../types'
+import { useItemsStore } from '../stores/items'
+import { useLocaleStore } from '../stores/locale'
+import { localizedName } from '../lib/i18nName'
+
 const props = defineProps<{
   item: ShopListItem
   shoppingMode: boolean
@@ -74,7 +80,13 @@ const props = defineProps<{
 
 const emit = defineEmits(['toggle', 'partial', 'remove'])
 
-import type { ShopListItem, ShopListStatus } from '../types'
+const itemsStore = useItemsStore()
+const localeStore = useLocaleStore()
+
+const displayName = computed(() => {
+  const fullItem = itemsStore.byId[props.item.item_id]
+  return fullItem ? localizedName(fullItem, localeStore.currentLocale) : props.item._name
+})
 
 function statusDotClasses(status: ShopListStatus) {
   const base = 'mt-1 block h-2 w-2 rounded-full'

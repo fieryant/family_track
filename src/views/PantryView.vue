@@ -4,6 +4,8 @@ import { usePantryStore } from '../stores/pantry'
 import { useItemsStore } from '../stores/items'
 import { useUnitsStore } from '../stores/units'
 import { useCategoriesStore } from '../stores/categories'
+import { useLocaleStore } from '../stores/locale'
+import { localizedName } from '../lib/i18nName'
 import EmptyState from '../components/EmptyState.vue'
 import Modal from '../components/Modal.vue'
 import FormInput from '../components/FormInput.vue'
@@ -17,6 +19,7 @@ const pantry = usePantryStore()
 const itemsStore = useItemsStore()
 const unitsStore = useUnitsStore()
 const categoriesStore = useCategoriesStore()
+const localeStore = useLocaleStore()
 
 interface PantryRow {
   entry: PantryItem
@@ -35,7 +38,7 @@ const rows = computed<PantryRow[]>(() => {
       const cat = item?.category_id ? categoriesStore.byId[item.category_id] : null
       return {
         entry,
-        name: item?.name ?? 'Unknown item',
+        name: item ? localizedName(item, localeStore.currentLocale) : 'Unknown item',
         unitLabel: unit?.label ?? '',
         categoryName: cat?.name ?? 'Other',
         categoryIcon: cat?.icon ?? '📦',
