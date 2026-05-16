@@ -94,6 +94,7 @@ import { useShopListStore } from '../stores/shopList'
 import { useSessionStore } from '../stores/session'
 import { useCategoriesStore } from '../stores/categories'
 import { useItemsStore } from '../stores/items'
+import { useUnitsStore } from '../stores/units'
 import CategoryGroup from '../components/CategoryGroup.vue'
 import ShopListItem from '../components/ShopListItem.vue'
 import BuyConfirmDialog from '../components/BuyConfirmDialog.vue'
@@ -103,6 +104,7 @@ const shopListStore = useShopListStore()
 const sessionStore = useSessionStore()
 const categoriesStore = useCategoriesStore()
 const itemsStore = useItemsStore()
+const unitsStore = useUnitsStore()
 
 const filter = ref('all')
 const showBuyDialog = ref(false)
@@ -171,6 +173,7 @@ onMounted(async () => {
   await Promise.all([
     categoriesStore.fetch(),
     itemsStore.fetch(),
+    unitsStore.fetch(),
     sessionStore.fetchActive(),
   ])
   await shopListStore.fetch()

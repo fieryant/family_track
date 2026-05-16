@@ -236,8 +236,8 @@ export const useShopListStore = defineStore('shopList', () => {
         .select(`
           *,
           item:items(name, category_id, unit_type_id),
-          requested_unit:units!requested_unit_id(symbol),
-          bought_unit_rel:units!bought_unit_id(symbol)
+          requested_unit:units!requested_unit_id(label),
+          bought_unit_rel:units!bought_unit_id(label)
         `)
 
       if (error) throw error

@@ -42,8 +42,7 @@ const unitTypeStore = useUnitTypesStore()
 
 function getDefaultUnitLabel(item: Item) {
   if (!item.unit_type_id) return '';
-  console.log(item.unit_type_id, unitTypeStore.byId);
-  
+
   return unitTypeStore.byId[item.unit_type_id]?.label ?? ''
 }
 
