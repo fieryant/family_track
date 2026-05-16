@@ -5,7 +5,7 @@
     @click="$emit('click')"
   >
     <span class="flex items-center gap-2">
-      <span class="text-sm font-semibold text-white">{{ item.name }}</span>
+      <span class="text-sm font-semibold text-white">{{ localizedName(item, localeStore.currentLocale) }}</span>
       <span
         v-if="due && !inList"
         class="rounded-full border border-fuchsia-400/30 bg-fuchsia-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-fuchsia-200"
@@ -28,6 +28,8 @@
 import { computed } from 'vue'
 import { Item } from '../types';
 import { useUnitTypesStore } from '../stores/unitTypes';
+import { useLocaleStore } from '../stores/locale';
+import { localizedName } from '../lib/i18nName';
 
 const props = defineProps<{
   item: Item
@@ -39,6 +41,7 @@ const props = defineProps<{
 }>()
 
 const unitTypeStore = useUnitTypesStore()
+const localeStore = useLocaleStore()
 
 function getDefaultUnitLabel(item: Item) {
   if (!item.unit_type_id) return '';

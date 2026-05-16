@@ -126,7 +126,7 @@ function closeCreateDialog() {
   }
 }
 
-async function handleCreateItemSubmit({ name, categoryId, unitTypeId }: { name: string; categoryId: string | null; unitTypeId: string }) {
+async function handleCreateItemSubmit({ name, nameBn, categoryId, unitTypeId }: { name: string; nameBn?: string; categoryId: string | null; unitTypeId: string }) {
   creatingItem.value = true
 
   try {
@@ -134,6 +134,7 @@ async function handleCreateItemSubmit({ name, categoryId, unitTypeId }: { name: 
       name,
       categoryId,
       unitTypeId,
+      translations: nameBn ? { bn: nameBn } : {},
     })
 
     closeCreateDialog()

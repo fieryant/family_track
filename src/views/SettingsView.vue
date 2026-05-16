@@ -35,6 +35,13 @@ const menuItems = [
     label: 'Items',
     description: 'Manage your item catalog',
   },
+  {
+    to: '/settings/language',
+    icon: '🌐',
+    bg: 'bg-cyan-400/10',
+    label: 'Language',
+    description: 'English / বাংলা',
+  },
 ]
 
 async function signOut() {

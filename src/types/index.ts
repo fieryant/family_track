@@ -1,3 +1,14 @@
+export type Locale = 'en' | 'bn'
+export type TranslatableEntity = 'item' | 'category' | 'unit' | 'unit_type'
+
+export interface Translation {
+  entity_type: TranslatableEntity
+  entity_id: string
+  locale: Locale
+  field: string
+  value: string
+}
+
 export interface Category {
   id: string
   name: string
@@ -28,6 +39,7 @@ export interface Item {
   unit_type_id: string | null
   is_active: boolean
   sort_order: number
+  translations?: Translation[]
 }
 
 export interface UnitPreset {

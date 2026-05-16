@@ -8,11 +8,18 @@
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <FormInput
         v-model="name"
-        label="Item name"
+        label="Item name (English)"
         placeholder="e.g. Avocados"
         type="text"
         :maxlength="80"
         autofocus
+      />
+      <FormInput
+        v-model="nameBn"
+        label="নাম (বাংলা)"
+        placeholder="যেমন: অ্যাভোকাডো"
+        type="text"
+        :maxlength="80"
       />
 
       <FormSelect v-model="categoryId" label="Category" :options="categoryOptions" />
@@ -50,12 +57,13 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
-  submit: [payload: { name: string; categoryId: string | null; unitTypeId: string }]
+  submit: [payload: { name: string; nameBn?: string; categoryId: string | null; unitTypeId: string }]
 }>()
 
 const unitTypesStore = useUnitTypesStore()
 
 const name = ref('')
+const nameBn = ref('')
 const categoryId = ref<string | null>(null)
 const unitType = ref('count')
 
@@ -84,6 +92,7 @@ watch(() => props.show, async (visible) => {
 defineExpose({
   reset() {
     name.value = ''
+    nameBn.value = ''
     categoryId.value = null
     unitType.value = unitTypeOptions.value[0]?.value ?? 'count'
   },
@@ -93,6 +102,7 @@ function handleSubmit() {
   if (!canSubmit.value || props.loading) return
   emit('submit', {
     name: name.value.trim(),
+    nameBn: nameBn.value.trim() || undefined,
     categoryId: categoryId.value,
     unitTypeId: unitType.value
   })

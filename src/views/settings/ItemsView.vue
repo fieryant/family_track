@@ -45,7 +45,7 @@
           :class="{ 'opacity-50': !item.is_active }"
         >
           <div class="flex-1 min-w-0">
-            <p class="font-medium text-slate-100 truncate">{{ item.name }}</p>
+            <p class="font-medium text-slate-100 truncate">{{ localizedName(item, localeStore.currentLocale) }}</p>
             <p class="text-xs text-slate-500">
               {{ categoryName(item.category_id) }} · {{ item.unit_type_id ? unitTypesStore.byId[item.unit_type_id]?.label : '—' }}
               <span v-if="!item.is_active" class="ml-1 rounded bg-slate-700 px-1 py-0.5 text-[10px] text-slate-400">inactive</span>
@@ -65,7 +65,8 @@
     <Modal :show="showForm" @close="closeForm">
       <h2 class="mb-5 text-lg font-semibold text-slate-100">{{ editing ? 'Edit Item' : 'Add Item' }}</h2>
       <div class="space-y-4">
-        <FormInput v-model="form.name" label="Name" placeholder="e.g. Brown Rice" :autofocus="true" :maxlength="80" />
+        <FormInput v-model="form.name" label="Name (English)" placeholder="e.g. Brown Rice" :autofocus="true" :maxlength="80" />
+        <FormInput v-model="form.nameBn" label="নাম (বাংলা)" placeholder="যেমন: বাদামি চাল" :maxlength="80" />
         <FormSelect v-model="form.categoryId" label="Category" :options="categoryOptions" />
         <FormSelect v-model="form.unitTypeId" label="Unit Type" :options="unitTypeOptions" />
         <label class="flex items-center gap-3 cursor-pointer">
@@ -98,7 +99,7 @@
     <Modal :show="showDelete" @close="showDelete = false">
       <h2 class="mb-2 text-lg font-semibold text-slate-100">Delete Item?</h2>
       <p class="mb-6 text-sm text-slate-400">
-        "<span class="text-slate-200">{{ deleteTarget?.name }}</span>" and all its unit presets will be permanently removed.
+        "<span class="text-slate-200">{{ deleteTarget ? localizedName(deleteTarget, localeStore.currentLocale) : '' }}</span>" and all its unit presets will be permanently removed.
       </p>
       <div class="flex gap-3">
         <button class="flex-1 rounded-2xl border border-white/10 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/5" @click="showDelete = false">Cancel</button>
@@ -118,11 +119,14 @@ import FormSelect from '../../components/FormSelect.vue'
 import { useItemsStore } from '../../stores/items'
 import { useCategoriesStore } from '../../stores/categories'
 import { useUnitTypesStore } from '../../stores/unitTypes'
+import { useLocaleStore } from '../../stores/locale'
+import { localizedName } from '../../lib/i18nName'
 import type { Item } from '../../types'
 
 const itemsStore = useItemsStore()
 const categoriesStore = useCategoriesStore()
 const unitTypesStore = useUnitTypesStore()
+const localeStore = useLocaleStore()
 
 const showForm = ref(false)
 const showDelete = ref(false)
@@ -132,7 +136,7 @@ const deleteTarget = ref<Item | null>(null)
 const searchQuery = ref('')
 
 const defaultUnitTypeId = () => unitTypesStore.sorted[0]?.id ?? ''
-const form = reactive({ name: '', categoryId: '', unitTypeId: '', isActive: true })
+const form = reactive({ name: '', nameBn: '', categoryId: '', unitTypeId: '', isActive: true })
 
 const categoryOptions = computed(() => [
   { value: '', label: '— No category —' },
@@ -145,9 +149,14 @@ const unitTypeOptions = computed(() =>
 
 const filteredItems = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
-  const all = [...itemsStore.items].sort((a, b) => a.name.localeCompare(b.name))
+  const all = [...itemsStore.items].sort((a, b) =>
+    localizedName(a, localeStore.currentLocale).localeCompare(localizedName(b, localeStore.currentLocale))
+  )
   if (!q) return all
-  return all.filter(i => i.name.toLowerCase().includes(q))
+  return all.filter(i => {
+    const hay = [i.name, ...(i.translations?.map(t => t.value) ?? [])]
+    return hay.some(n => n.toLowerCase().includes(q))
+  })
 })
 
 function categoryName(catId: string | null | undefined) {
@@ -158,6 +167,7 @@ function categoryName(catId: string | null | undefined) {
 function openAdd() {
   editing.value = null
   form.name = ''
+  form.nameBn = ''
   form.categoryId = ''
   form.unitTypeId = defaultUnitTypeId()
   form.isActive = true
@@ -167,6 +177,7 @@ function openAdd() {
 function openEdit(item: Item) {
   editing.value = item
   form.name = item.name
+  form.nameBn = item.translations?.find(t => t.locale === 'bn' && t.field === 'name')?.value ?? ''
   form.categoryId = item.category_id ?? ''
   form.unitTypeId = item.unit_type_id ?? defaultUnitTypeId()
   form.isActive = item.is_active
@@ -180,6 +191,7 @@ function closeForm() {
 
 async function save() {
   saving.value = true
+  const translations = form.nameBn.trim() ? { bn: form.nameBn.trim() } : {}
   try {
     if (editing.value) {
       await itemsStore.updateItem(editing.value.id, {
@@ -187,6 +199,7 @@ async function save() {
         categoryId: form.categoryId || null,
         unitTypeId: form.unitTypeId || null,
         isActive: form.isActive,
+        translations,
       })
     } else {
       await itemsStore.createItem({
@@ -194,6 +207,7 @@ async function save() {
         categoryId: form.categoryId || null,
         unitTypeId: form.unitTypeId || null,
         isActive: form.isActive,
+        translations,
       })
     }
     closeForm()

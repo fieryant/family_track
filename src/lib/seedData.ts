@@ -1,4 +1,4 @@
-import type { UnitType, Unit, Category, Item, UnitPreset } from '../types'
+import type { UnitType, Unit, Category, Item, UnitPreset, Translation } from '../types'
 
 // Seed data — used as fallback when Supabase is not configured
 
@@ -154,6 +154,54 @@ export function buildUnitPresetsForItem(
     })
     .filter((p): p is UnitPreset => p !== null)
 }
+
+const bnNames: Record<string, string> = {
+  'item-tomato':     'টমেটো',
+  'item-onion':      'পেঁয়াজ',
+  'item-potato':     'আলু',
+  'item-garlic':     'রসুন',
+  'item-lemon':      'লেবু',
+  'item-banana':     'কলা',
+  'item-apple':      'আপেল',
+  'item-carrot':     'গাজর',
+  'item-cucumber':   'শসা',
+  'item-pepper':     'ক্যাপসিকাম',
+  'item-milk':       'দুধ',
+  'item-eggs':       'ডিম',
+  'item-cheese':     'পনির',
+  'item-yogurt':     'দই',
+  'item-butter':     'মাখন',
+  'item-chicken':    'মুরগি',
+  'item-beef':       'গরুর মাংস',
+  'item-fish':       'মাছ',
+  'item-bread':      'পাউরুটি',
+  'item-water':      'পানি',
+  'item-juice':      'জুস',
+  'item-tea':        'চা',
+  'item-coffee':     'কফি',
+  'item-chips':      'চিপস',
+  'item-biscuits':   'বিস্কুট',
+  'item-salt':       'লবণ',
+  'item-oil':        'রান্নার তেল',
+  'item-soy-sauce':  'সয়া সস',
+  'item-rice':       'চাল',
+  'item-pasta':      'পাস্তা',
+  'item-flour':      'আটা',
+  'item-detergent':  'ডিটারজেন্ট',
+  'item-tissue':     'টিস্যু',
+  'item-soap':       'ডিশ সাবান',
+  'item-shampoo':    'শ্যাম্পু',
+  'item-toothpaste': 'টুথপেস্ট',
+}
+
+export const seedTranslations: Translation[] = seedItems.flatMap(item => {
+  const rows: Translation[] = [
+    { entity_type: 'item', entity_id: item.id, locale: 'en', field: 'name', value: item.name },
+  ]
+  const bn = bnNames[item.id]
+  if (bn) rows.push({ entity_type: 'item', entity_id: item.id, locale: 'bn', field: 'name', value: bn })
+  return rows
+})
 
 export const seedUnitPresets: UnitPreset[] = seedItems.flatMap(item => {
   const unitType = seedUnitTypes.find(ut => ut.id === item.unit_type_id)

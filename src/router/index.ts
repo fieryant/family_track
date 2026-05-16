@@ -64,6 +64,11 @@ const routes = [
     name: 'settings-items',
     component: () => import('../views/settings/ItemsView.vue'),
   },
+  {
+    path: '/settings/language',
+    name: 'settings-language',
+    component: () => import('../views/settings/LanguageView.vue'),
+  },
 ]
 
 const router = createRouter({

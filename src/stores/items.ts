@@ -3,7 +3,8 @@ import { ref, computed } from 'vue'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { seedItems, seedUnitPresets } from '../lib/seedData'
 import { useUnitsStore } from './units'
-import type { Item, UnitPreset } from '../types'
+import { useTranslationsStore } from './translations'
+import type { Item, UnitPreset, Locale } from '../types'
 
 export const useItemsStore = defineStore('items', () => {
   const items = ref<Item[]>([])
@@ -42,9 +43,11 @@ export const useItemsStore = defineStore('items', () => {
   function search(query: string): Item[] {
     if (!query) return items.value.filter(i => i.is_active)
     const q = query.toLowerCase()
-    return items.value.filter(
-      i => i.is_active && i.name.toLowerCase().includes(q)
-    )
+    return items.value.filter(i => {
+      if (!i.is_active) return false
+      const hay = [i.name, ...(i.translations?.map(t => t.value) ?? [])]
+      return hay.some(n => n.toLowerCase().includes(q))
+    })
   }
 
   function nextSortOrder(categoryId: string | null): number {
@@ -55,7 +58,11 @@ export const useItemsStore = defineStore('items', () => {
 
   function findActiveItemByName(name: string): Item | null {
     const normalizedName = name.trim().toLowerCase()
-    return items.value.find(item => item.is_active && item.name.trim().toLowerCase() === normalizedName) ?? null
+    return items.value.find(item => {
+      if (!item.is_active) return false
+      const names = [item.name, ...(item.translations?.map(t => t.value) ?? [])]
+      return names.some(n => n.trim().toLowerCase() === normalizedName)
+    }) ?? null
   }
 
   async function createItem({
@@ -63,11 +70,13 @@ export const useItemsStore = defineStore('items', () => {
     categoryId = null,
     unitTypeId = null,
     isActive = true,
+    translations = {},
   }: {
     name: string
     categoryId?: string | null
     unitTypeId?: string | null
     isActive?: boolean
+    translations?: Partial<Record<Locale, string>>
   }): Promise<Item> {
     const trimmedName = name?.trim()
     if (!trimmedName) throw new Error('Item name is required')
@@ -75,6 +84,7 @@ export const useItemsStore = defineStore('items', () => {
     const existingItem = findActiveItemByName(trimmedName)
     if (existingItem) return existingItem
 
+    const translationsStore = useTranslationsStore()
     const newItem: Item = {
       id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       category_id: categoryId,
@@ -99,16 +109,31 @@ export const useItemsStore = defineStore('items', () => {
 
       if (error) throw error
 
+      const allLocales: Partial<Record<Locale, string>> = { en: trimmedName, ...translations }
+      for (const [locale, value] of Object.entries(allLocales)) {
+        if (value?.trim()) {
+          await translationsStore.upsert('item', data.id, locale as Locale, value.trim())
+        }
+      }
+      data.translations = translationsStore.get('item', data.id)
       items.value.push(data)
       return data
     }
 
+    const allLocales: Partial<Record<Locale, string>> = { en: trimmedName, ...translations }
+    for (const [locale, value] of Object.entries(allLocales)) {
+      if (value?.trim()) {
+        await translationsStore.upsert('item', newItem.id, locale as Locale, value.trim())
+      }
+    }
+    newItem.translations = translationsStore.get('item', newItem.id)
     items.value.push(newItem)
     return newItem
   }
 
   async function fetch() {
     loading.value = true
+    const translationsStore = useTranslationsStore()
     try {
       if (isSupabaseConfigured) {
         const [itemsRes, presetsRes] = await Promise.all([
@@ -117,10 +142,18 @@ export const useItemsStore = defineStore('items', () => {
         ])
         if (itemsRes.error) throw itemsRes.error
         if (presetsRes.error) throw presetsRes.error
-        items.value = itemsRes.data
+        await translationsStore.fetchFor('item')
+        items.value = itemsRes.data.map((item: Item) => ({
+          ...item,
+          translations: translationsStore.get('item', item.id),
+        }))
         unitPresets.value = presetsRes.data
       } else {
-        items.value = seedItems
+        await translationsStore.fetchFor('item')
+        items.value = seedItems.map(item => ({
+          ...item,
+          translations: translationsStore.get('item', item.id),
+        }))
         unitPresets.value = seedUnitPresets
       }
     } catch (e) {
@@ -134,16 +167,39 @@ export const useItemsStore = defineStore('items', () => {
 
   async function updateItem(
     id: string,
-    { name, categoryId, unitTypeId, isActive }: { name?: string; categoryId?: string | null; unitTypeId?: string | null; isActive?: boolean }
+    {
+      name,
+      categoryId,
+      unitTypeId,
+      isActive,
+      translations = {},
+    }: {
+      name?: string
+      categoryId?: string | null
+      unitTypeId?: string | null
+      isActive?: boolean
+      translations?: Partial<Record<Locale, string>>
+    }
   ): Promise<Item> {
     const idx = items.value.findIndex(i => i.id === id)
     if (idx === -1) throw new Error('Item not found')
 
+    const translationsStore = useTranslationsStore()
+    const trimmedName = name?.trim()
     const patch = {
-      name: name?.trim() ?? items.value[idx].name,
+      name: trimmedName ?? items.value[idx].name,
       category_id: categoryId !== undefined ? categoryId : items.value[idx].category_id,
       unit_type_id: unitTypeId !== undefined ? unitTypeId : items.value[idx].unit_type_id,
       is_active: isActive !== undefined ? isActive : items.value[idx].is_active,
+    }
+
+    for (const [locale, value] of Object.entries(translations)) {
+      if (value !== undefined) {
+        await translationsStore.upsert('item', id, locale as Locale, value.trim())
+      }
+    }
+    if (trimmedName) {
+      await translationsStore.upsert('item', id, 'en', trimmedName)
     }
 
     if (isSupabaseConfigured) {
@@ -154,19 +210,22 @@ export const useItemsStore = defineStore('items', () => {
         .select('*')
         .single()
       if (error) throw error
+      data.translations = translationsStore.get('item', id)
       items.value[idx] = data
       return data
     }
 
-    items.value[idx] = { ...items.value[idx], ...patch }
+    items.value[idx] = { ...items.value[idx], ...patch, translations: translationsStore.get('item', id) }
     return items.value[idx]
   }
 
   async function removeItem(id: string): Promise<void> {
+    const translationsStore = useTranslationsStore()
     if (isSupabaseConfigured) {
       const { error } = await supabase!.from('items').delete().eq('id', id)
       if (error) throw error
     }
+    await translationsStore.removeFor('item', id)
     items.value = items.value.filter(i => i.id !== id)
     unitPresets.value = unitPresets.value.filter(p => p.item_id !== id)
   }
