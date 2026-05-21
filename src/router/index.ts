@@ -40,6 +40,11 @@ const routes = [
     component: () => import('../views/PantryView.vue'),
   },
   {
+    path: '/assistant',
+    name: 'assistant',
+    component: () => import('../views/VoiceAssistantView.vue'),
+  },
+  {
     path: '/settings',
     name: 'settings',
     component: () => import('../views/SettingsView.vue'),
