@@ -48,18 +48,11 @@
         <path d="M16 10a4 4 0 0 1-8 0"/>
       </svg>
       <h3 class="text-lg font-semibold text-slate-200">Your list is empty</h3>
-      <p class="mt-2 max-w-sm text-sm text-slate-400">Tap the + button below to add items for your next shopping trip</p>
+      <p class="mt-2 max-w-sm text-sm text-slate-400">Use the Add tab below to add items for your next shopping trip</p>
       <router-link id="go-add-btn" to="/add" class="mt-6 inline-flex items-center justify-center rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
         Add Items
       </router-link>
     </div>
-
-    <router-link v-if="!shopListStore.shoppingMode && shopListStore.listItems.length > 0" id="fab-add" to="/add" class="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br from-cyan-400 to-fuchsia-500 text-white shadow-lg shadow-cyan-400/30 transition hover:scale-105 active:scale-95">
-      <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="12" y1="5" x2="12" y2="19"/>
-        <line x1="5" y1="12" x2="19" y2="12"/>
-      </svg>
-    </router-link>
 
     <button
       v-if="shopListStore.shoppingMode && shopListStore.summary.bought + shopListStore.summary.partial > 0"

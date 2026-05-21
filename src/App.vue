@@ -54,7 +54,7 @@ const showChrome = computed(() =>
         </router-view>
       </main>
 
-      <VoiceAssistant v-if="showChrome" />
+      <VoiceAssistant v-if="showChrome && route.name !== 'assistant'" />
 
       <nav
         v-if="showChrome"
